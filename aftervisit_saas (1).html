@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AfterVisit — AI Post-Visit Care Platform</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0F1E;--bg2:#0E1526;--bg3:#131D32;--bg4:#1A2540;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.12);
+  --t1:#EEF2FF;--t2:#8896B5;--t3:#4E5E80;
+  --teal:#00C9AF;--teal2:rgba(0,201,175,.12);--tealB:rgba(0,201,175,.25);
+  --blue:#4F8EF7;--blue2:rgba(79,142,247,.12);--blueB:rgba(79,142,247,.25);
+  --amber:#F5A623;--amber2:rgba(245,166,35,.12);--amberB:rgba(245,166,35,.25);
+  --red:#FF4D6D;--red2:rgba(255,77,109,.12);--redB:rgba(255,77,109,.25);
+  --green:#22C55E;--green2:rgba(34,197,94,.12);--greenB:rgba(34,197,94,.25);
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--t1);overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button,input,select{font-family:inherit}
+input,select{background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:10px 13px;color:var(--t1);font-size:13px;outline:none;width:100%;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--teal)}
+input::placeholder{color:var(--t3)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.show{display:flex}
+
+/* ── LOGIN ── */
+#s-login{align-items:center;justify-content:center;flex-direction:column;background:var(--bg)}
+.login-card{background:var(--bg2);border:1px solid var(--b2);border-radius:18px;padding:36px;width:100%;max-width:380px}
+.login-logo{font-size:28px;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:-1px}
+.login-logo span{color:var(--teal)}
+.login-sub{font-size:12px;color:var(--t3);text-align:center;margin-bottom:28px}
+.tab-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:22px}
+.tab-btn{padding:9px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s;color:var(--t2);background:transparent}
+.tab-btn.on{background:var(--bg4);color:var(--t1)}
+.f-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;display:block}
+.f-group{margin-bottom:13px}
+.btn-primary{width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-teal{background:var(--teal);color:#0A0F1E}
+.btn-teal:hover{opacity:.9}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{opacity:.9}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--t3);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--b1)}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.demo-btn{padding:10px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .2s}
+.demo-btn:hover{opacity:.85}
+.demo-p{background:var(--teal2);color:var(--teal);border-color:var(--tealB)}
+.demo-d{background:var(--blue2);color:var(--blue);border-color:var(--blueB)}
+
+/* ── APP SHELL ── */
+#s-app{flex-direction:row}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;flex-shrink:0}
+.sb-head{padding:18px 14px 12px;border-bottom:1px solid var(--b1)}
+.sb-logo{font-size:18px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px}
+.sb-logo span{color:var(--teal)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--b1);border-radius:9px}
+.sb-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.sb-av.p{background:var(--teal2);color:var(--teal);border:1px solid var(--tealB)}
+.sb-av.d{background:var(--blue2);color:var(--blue);border:1px solid var(--blueB)}
+.sb-uname{font-size:11px;font-weight:600;color:var(--t1)}
+.sb-urole{font-size:9px;color:var(--t3)}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.sb-sec{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:10px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--t2);font-size:12px;font-weight:500;border:1px solid transparent;transition:all .18s;user-select:none}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--t1)}
+.nav-item.on{background:var(--teal2);color:var(--teal);border-color:var(--tealB)}
+.nav-item.on.doc{background:var(--blue2);color:var(--blue);border-color:var(--blueB)}
+.nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nb-red{background:var(--red);color:#fff}
+.nb-teal{background:var(--teal);color:#0A0F1E}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--b1)}
+.app-right{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow-y:auto}
+.topbar{height:52px;background:rgba(10,15,30,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:50;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600;color:var(--t1)}
+.tb-actions{display:flex;gap:8px}
+.tb-btn{width:32px;height:32px;border-radius:8px;background:var(--bg3);border:1px solid var(--b1);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;color:var(--t2);transition:all .2s}
+.tb-btn:hover{border-color:var(--b2);color:var(--t1)}
+.tb-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.tb-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg)}
+.page-wrap{flex:1;padding:22px}
+.page{display:none;animation:pgIn .2s ease}
+.page.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pg-title{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:2px}
+.pg-sub{font-size:12px;color:var(--t2);margin-bottom:18px}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 8px;border-radius:5px;border:1px solid;white-space:nowrap;letter-spacing:.03em;text-transform:uppercase}
+.tg{background:var(--teal2);color:var(--teal);border-color:var(--tealB)}
+.tb{background:var(--blue2);color:var(--blue);border-color:var(--blueB)}
+.ta{background:var(--amber2);color:var(--amber);border-color:var(--amberB)}
+.tr{background:var(--red2);color:var(--red);border-color:var(--redB)}
+.tgr{background:var(--green2);color:var(--green);border-color:var(--greenB)}
+
+/* ── CARDS / GRIDS ── */
+.card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.mb14{margin-bottom:14px}
+.stat-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:14px}
+.stat-n{font-size:34px;font-weight:700;letter-spacing:-1.5px;line-height:1;margin-bottom:5px}
+.stat-l{font-size:11px;color:var(--t2);margin-bottom:4px}
+.stat-t{font-size:10px;color:var(--t3);font-weight:500}
+.sec-title{font-size:13px;font-weight:700;margin-bottom:12px}
+
+/* ── ALERTS ── */
+.alert{display:flex;gap:11px;padding:12px 14px;border-radius:10px;border:1px solid;margin-bottom:14px}
+.alert-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.alert-t{font-size:12px;font-weight:700;margin-bottom:2px}
+.alert-d{font-size:11px;line-height:1.55}
+.alert-red{background:var(--red2);border-color:var(--redB)}
+.alert-red .alert-icon{background:rgba(255,77,109,.2);color:var(--red)}
+.alert-red .alert-t{color:var(--red)}
+.alert-red .alert-d{color:rgba(255,100,120,.85)}
+.alert-amber{background:var(--amber2);border-color:var(--amberB)}
+.alert-amber .alert-icon{background:rgba(245,166,35,.2);color:var(--amber)}
+.alert-amber .alert-t{color:var(--amber)}
+.alert-amber .alert-d{color:rgba(245,166,35,.85)}
+
+/* ── MEDICINE ROWS ── */
+.med-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--b1)}
+.med-row:last-child{border-bottom:none}
+.med-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.med-info{font-size:10px;color:var(--t2)}
+.med-dose{font-size:10px;font-weight:600;margin-right:8px}
+.chk{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--b2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chk svg{width:12px;height:12px;stroke:var(--t3);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.chk.done{background:var(--teal2);border-color:var(--tealB)}
+.chk.done svg{stroke:var(--teal)}
+
+/* ── BARS ── */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-lbl{font-size:11px;color:var(--t2);width:90px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:var(--b2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.bar-val{font-size:10px;width:32px;text-align:right;font-weight:600}
+
+/* ── TIMELINE ── */
+.tl{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:10px;padding-bottom:13px;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{content:'';position:absolute;left:7px;top:17px;bottom:0;width:1px;background:var(--b1)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:16px;height:16px;border-radius:50%;border:2px solid;flex-shrink:0;z-index:1;background:var(--bg2)}
+.tl-body{flex:1}
+.tl-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.tl-desc{font-size:11px;color:var(--t2);line-height:1.5}
+.tl-time{font-size:9px;color:var(--t3);margin-top:3px}
+
+/* ── CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;background:var(--bg3);border:1px solid var(--b1);border-radius:14px;overflow:hidden;height:460px}
+.chat-hdr{padding:11px 14px;background:var(--bg2);border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:9px;flex-shrink:0}
+.chat-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-name{font-size:12px;font-weight:700}
+.chat-status{font-size:10px;display:flex;align-items:center;gap:5px}
+.online-dot{width:5px;height:5px;border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.chat-msgs{flex:1;padding:13px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:80%;padding:9px 12px;border-radius:11px;font-size:12px;line-height:1.65;border:1px solid}
+.msg-ai{background:var(--bg4);border-color:var(--b1);border-radius:3px 11px 11px 11px;align-self:flex-start;color:var(--t1)}
+.msg-user{background:var(--teal2);border-color:var(--tealB);border-radius:11px 3px 11px 11px;align-self:flex-end;color:var(--t1)}
+.msg-time{font-size:9px;color:var(--t3);margin-top:3px}
+.typing{display:flex;gap:4px;padding:9px 12px;background:var(--bg4);border:1px solid var(--b1);border-radius:3px 11px 11px 11px;width:fit-content;align-self:flex-start}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:typDot 1.2s ease infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+.qr-wrap{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px;background:var(--bg2);border-top:1px solid var(--b1);flex-shrink:0}
+.qr-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s}
+.qr-btn:hover{background:var(--teal2);border-color:var(--tealB);color:var(--teal)}
+.chat-inp-row{padding:9px;background:var(--bg2);border-top:1px solid var(--b1);display:flex;gap:7px;flex-shrink:0}
+.chat-inp{flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--t1);outline:none}
+.chat-inp:focus{border-color:var(--tealB)}
+.chat-inp::placeholder{color:var(--t3)}
+.chat-send{background:var(--teal);color:#0A0F1E;border:none;border-radius:9px;width:35px;height:35px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s}
+.chat-send:hover{opacity:.85}
+.chat-send svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── LAB TABLE ── */
+.lab-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b1)}
+.lab-row:last-child{border-bottom:none}
+.lab-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.lab-range{font-size:10px;color:var(--t3)}
+.lab-val{font-size:14px;font-weight:700}
+
+/* ── SYMPTOM ── */
+.sym-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.sym-btn{padding:9px;border-radius:9px;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
+.sym-btn:hover,.sym-btn.on{background:var(--teal2);border-color:var(--tealB);color:var(--teal)}
+.sym-btn.urg{color:var(--red);border-color:var(--redB)}
+.sym-btn.urg:hover,.sym-btn.urg.on{background:var(--red2)}
+.sym-result{display:none;border-radius:10px;padding:13px;font-size:12px;line-height:1.7;white-space:pre-line;border:1px solid}
+
+/* ── PATIENT TABLE ── */
+.pt-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.pt-table th{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:0 10px 9px;text-align:left;border-bottom:1px solid var(--b1)}
+.pt-table td{padding:10px;border-bottom:1px solid var(--b1);font-size:12px;vertical-align:middle}
+.pt-table tr:last-child td{border-bottom:none}
+.pt-table tbody tr{cursor:pointer;transition:background .15s}
+.pt-table tbody tr:hover td{background:rgba(255,255,255,.03)}
+.comp-bar{height:4px;background:var(--b2);border-radius:2px;overflow:hidden;width:70px;margin-top:3px}
+
+/* ── ACTIONS ── */
+.act-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .2s}
+.act-btn:hover{opacity:.8}
+.act-teal{background:var(--teal2);color:var(--teal);border-color:var(--tealB)}
+.act-blue{background:var(--blue2);color:var(--blue);border-color:var(--blueB)}
+.act-red{background:var(--red2);color:var(--red);border-color:var(--redB)}
+.act-grey{background:var(--bg3);color:var(--t2);border-color:var(--b2)}
+
+/* ── HEATMAP ── */
+.hm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.hm-cell{height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;border:1px solid}
+
+/* ── SCHEDULE ── */
+.sch-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b1)}
+.sch-row:last-child{border-bottom:none}
+.sch-time{font-size:10px;color:var(--t3);width:50px;flex-shrink:0}
+
+/* ── TRANSCRIPT ── */
+.tr-wrap{background:var(--bg3);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.tr-hdr{padding:10px 13px;background:var(--bg2);border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center}
+.tr-msgs{padding:12px;display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}
+.tr-pt{max-width:80%;padding:7px 10px;border-radius:10px 2px 10px 10px;font-size:11px;line-height:1.6;border:1px solid var(--tealB);background:var(--teal2);align-self:flex-end}
+.tr-ai{max-width:80%;padding:7px 10px;border-radius:2px 10px 10px 10px;font-size:11px;line-height:1.6;border:1px solid var(--b1);background:var(--bg4);align-self:flex-start}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--bg2);border:1px solid var(--b2);border-radius:18px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;position:relative;animation:pgIn .25s ease}
+.modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:7px;background:var(--bg3);border:1px solid var(--b1);cursor:pointer;color:var(--t2);font-size:14px;display:flex;align-items:center;justify-content:center}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:600;z-index:999;animation:pgIn .3s ease;pointer-events:none;border:1px solid}
+.toast-s{background:var(--teal2);color:var(--teal);border-color:var(--tealB)}
+.toast-e{background:var(--red2);color:var(--red);border-color:var(--redB)}
+
+/* ── RING ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ring-center{margin-top:-64px;text-align:center;position:relative;z-index:1}
+.ring-num{font-size:26px;font-weight:700;line-height:1}
+.ring-lbl{font-size:10px;color:var(--t2)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen show" id="s-login">
+  <div class="login-card">
+    <div class="login-logo">After<span>Visit</span></div>
+    <div class="login-sub">AI post-visit patient care · India</div>
+    <div class="tab-row">
+      <button class="tab-btn on" id="t-signin" onclick="showTab('signin')">Sign In</button>
+      <button class="tab-btn" id="t-register" onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <div id="form-signin">
+      <div class="f-group">
+        <label class="f-label">Email or phone</label>
+        <input id="l-email" type="text" placeholder="doctor@hospital.com">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Password</label>
+        <input id="l-pass" type="password" placeholder="••••••••">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Login as</label>
+        <select id="l-role"><option value="patient">Patient</option><option value="doctor">Doctor</option></select>
+      </div>
+      <button class="btn-primary btn-teal" onclick="doLogin()">Sign In →</button>
+      <div class="divider">or try demo</div>
+      <div class="demo-grid">
+        <button class="demo-btn demo-p" onclick="demoLogin('patient')">Demo Patient</button>
+        <button class="demo-btn demo-d" onclick="demoLogin('doctor')">Demo Doctor</button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="form-register" style="display:none">
+      <div class="f-group"><label class="f-label">Full name</label><input id="r-name" type="text" placeholder="Dr. Rajan Deshmukh"></div>
+      <div class="f-group"><label class="f-label">Email</label><input id="r-email" type="email" placeholder="doctor@hospital.com"></div>
+      <div class="f-group"><label class="f-label">Phone</label><input id="r-phone" type="tel" placeholder="+91 98765 43210"></div>
+      <div class="f-group"><label class="f-label">City</label><input id="r-city" type="text" placeholder="Nagpur, Gondia..."></div>
+      <div class="f-group"><label class="f-label">Role</label><select id="r-role"><option value="patient">Patient</option><option value="doctor">Doctor</option></select></div>
+      <div class="f-group"><label class="f-label">Password</label><input id="r-pass" type="password" placeholder="Create password"></div>
+      <button class="btn-primary btn-blue" onclick="doRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="screen" id="s-app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">After<span>Visit</span></div>
+      <div class="sb-user">
+        <div class="sb-av" id="sb-av"></div>
+        <div><div class="sb-uname" id="sb-name"></div><div class="sb-urole" id="sb-role"></div></div>
+      </div>
+    </div>
+    <nav class="sb-nav" id="sb-nav"></nav>
+    <div class="sb-foot">
+      <div class="nav-item" onclick="signOut()" style="color:var(--red)">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-right">
+    <div class="topbar">
+      <div class="topbar-title" id="tb-title">Dashboard</div>
+      <div class="tb-actions">
+        <div class="tb-btn" id="bell-btn" onclick="navTo(ROLE==='patient'?'p-alerts':'d-escalations')">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <div class="tb-dot"></div>
+        </div>
+        <div class="tb-btn" onclick="signOut()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="page-wrap" id="pages"></div>
+  </div>
+</div>
+
+<!-- MODAL CONTAINER -->
+<div class="modal-bg" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><button class="modal-close" onclick="closeModal()">✕</button><div id="modal-body"></div></div>
+</div>
+
+<script>
+// ═══ STATE ═══
+var ROLE='', UNAME='', PAGE='';
+
+// ═══ DATA ═══
+var VISITS=[
+  {date:'20 May 2026',doc:'Dr. Rajan Deshmukh',spec:'MD Cardiology · City Hospital',quote:'"BP improved to 134/86. Medicines working well. Watch fasting sugar — slightly elevated in latest CBC."',tags:[['tb','BP: 134/86'],['tg','Medicines OK'],['ta','Sugar: monitor']],vitals:[['Blood Pressure','134/86 mmHg','amber'],['Heart Rate','78 bpm','green'],['Weight','74 kg','green']],dx:'Stage 1 Hypertension — showing improvement from 148/92 over 2 months. Medicines are working effectively.',rx:['Continue Amlodipine 5mg every morning after food','Continue Telmisartan 40mg every night before food','Continue Aspirin 75mg every morning after food','Monitor BP every Sunday morning — note in diary','Reduce sodium below 2g daily — avoid pickles, papad, chips','Daily 30–45 minute morning walk — do not skip','Fasting sugar 112 — reduce sweets and white rice immediately','Deep breathing 10 minutes daily for stress management'],fu:'June 3, 2026 — BP review and fasting sugar discussion'},
+  {date:'22 Mar 2026',doc:'Dr. Rajan Deshmukh',spec:'MD Cardiology · City Hospital',quote:'"Blood pressure elevated at 148/92 — starting medication today. Strict lifestyle changes needed alongside medicines."',tags:[['tr','BP: 148/92'],['tg','New prescription'],['ta','Diet counselling']],vitals:[['Blood Pressure','148/92 mmHg','red'],['Heart Rate','84 bpm','amber'],['Weight','76 kg','amber']],dx:'Stage 1 Hypertension — newly diagnosed. Likely due to work stress, poor diet, and physical inactivity.',rx:['Starting Amlodipine 5mg — take every morning after food','Starting Aspirin 75mg — take every morning after food','Strict low-sodium diet — maximum 2g per day','No smoking, no alcohol','Minimum 30 minutes daily walk','Reduce work stress — no late nights'],fu:'20 May 2026 — 2-month medication review'},
+  {date:'10 Jan 2026',doc:'Dr. Priya Mehta',spec:'MBBS General Physician · Nagpur',quote:'"Seasonal viral fever. Temperature 101.4°F. Rest, fluids, paracetamol. No antibiotic needed."',tags:[['ta','Viral fever'],['tgr','Resolved']],vitals:[['Temperature','101.4°F','amber'],['Throat','Mild redness','amber'],['Lungs','Clear','green']],dx:'Seasonal viral upper respiratory infection. No bacterial signs. No antibiotic needed.',rx:['Paracetamol 500mg every 6 hours for fever above 100°F','Plenty of fluids — water, coconut water, dal ka paani','Rest for 3 days','Steam inhalation twice daily for throat','Follow up only if fever continues beyond 5 days'],fu:'Only if symptoms persist beyond 5 days — resolved'},
+];
+
+var PATIENTS=[
+  {init:'RS',name:'Rahul Sharma',sub:'42 · Male · Nagpur',cond:'Hypertension',ct:'tb',comp:94,cc:'var(--green)',ai:'12 this month',at:'tg',status:'Sugar flag',st:'ta',flag:'Fasting sugar 112 mg/dL — pre-diabetic range. Mention at June 3 visit.',meds:['Amlodipine 5mg — morning after food','Telmisartan 40mg — night before food','Aspirin 75mg — morning after food'],next:'June 3, 2026',urgent:false},
+  {init:'SG',name:'Suresh Gupta',sub:'60 · Male · Nagpur',cond:'HTN + CAD',ct:'tb',comp:62,cc:'var(--amber)',ai:'3 today',at:'ta',status:'Emergency last night',st:'tr',flag:'Chest pain emergency at 2:14 AM — patient went to City Hospital emergency. ECG and troponin results needed before today 3 PM visit.',meds:['Metoprolol 50mg — morning','Ramipril 5mg — morning','Atorvastatin 20mg — night','Aspirin 75mg — morning'],next:'TODAY — URGENT 3:00 PM',urgent:true},
+  {init:'MJ',name:'Meena Joshi',sub:'68 · Female · Nagpur',cond:'Diabetes T2',ct:'tb',comp:88,cc:'var(--teal)',ai:'8 this month',at:'tg',status:'Today 2 PM',st:'tb',flag:'HbA1c 7.2% — at target. Continue current plan.',meds:['Metformin 500mg — morning and night','Glimepiride 1mg — morning','Insulin Glargine 10u — night'],next:'Today 2:00 PM',urgent:false},
+  {init:'RT',name:'Ravi Tiwari',sub:'55 · Male · Nagpur',cond:'Heart Failure',ct:'tr',comp:45,cc:'var(--red)',ai:'2 this month',at:'tb',status:'Low compliance',st:'tr',flag:'45% compliance on Metoprolol. Patient told AI about daytime fatigue side effect — never mentioned at OPD. HIGH RISK — call today.',meds:['Metoprolol 50mg — morning','Furosemide 40mg — morning','Spironolactone 25mg — morning','Sacubitril/Valsartan — morning and night'],next:'2 May — OVERDUE 18 DAYS',urgent:true},
+  {init:'AS',name:'Anita Sharma',sub:'52 · Female · Nagpur',cond:'DM + HTN',ct:'ta',comp:78,cc:'var(--teal)',ai:'6 this month',at:'tg',status:'Today 3:30 PM',st:'tb',flag:'Foot care concern raised with AI. Check for diabetic neuropathy at next visit.',meds:['Metformin 1000mg — morning and night','Amlodipine 5mg — morning','Losartan 50mg — morning'],next:'Today 3:30 PM',urgent:false},
+];
+
+var SYM_DATA={
+  'Headache':{t:'Headache — BP patients',c:'amber',m:'Kabhi kabhi elevated BP ka sign ho sakta hai. Abhi BP check karein — agar 150/95 se zyada hai toh doctor ko call karein. Paracetamol 500mg le sakte hain. Ek ghante mein theek nahi hua toh doctor call karein.'},
+  'Dizziness':{t:'Dizziness — BP related',c:'amber',m:'Slowly uthkar baithein, phir slowly khado. Paani piyo. 10 minute mein theek nahi hua toh BP check karo.'},
+  'Fatigue':{t:'Fatigue — medication side effect',c:'green',m:'Amlodipine se mild fatigue starting mein hoti hai. Ensure 7-8 ghante ki neend. Khaana skip mat karo. Zyada hone par doctor ko batao.'},
+  'Short of breath':{t:'Shortness of breath — needs attention',c:'red',m:'Seedha baithein, tight kapde loosen karein. 5 minute mein relief nahi — Dr. Deshmukh call karein. Chest discomfort saath hai — 108 call karein immediately.'},
+  'Nausea':{t:'Nausea — medicine related',c:'amber',m:'Amlodipine aur Aspirin khali pet lene par nausea dete hain. Confirm karo ki khane ke baad le rahe ho. Ginger tea pi sakte ho.'},
+  'Leg swelling':{t:'Leg swelling — monitor',c:'amber',m:'Amlodipine ka known side effect hai ankle swelling. Legs elevated rakho soते time. Namak kam karo. June 3 visit mein zaroor batana.'},
+  'Palpitations':{t:'Heart pounding — check BP first',c:'amber',m:'BP check karein abhi. Normal hai aur palpitations band ho jaayein — observe. 5+ minutes continue kare ya BP high ho — doctor call karein.'},
+  'Blurry vision':{t:'Blurry vision — WARNING sign',c:'red',m:'BP ke saath blurry vision WARNING hai. Abhi BP check karein. 160/100 se zyada — 108 ya hospital IMMEDIATELY. Akele mat jaayein.'},
+  'Back pain':{t:'Back pain — likely postural',c:'green',m:'November visit mein lumbar strain tha. Hot compress 15 minute do. Walk karo thoda. Dr. Kulkarni ke exercises karo. Pain leg mein jaata hai — call Dr. Kulkarni.'},
+  '⚠ Chest pain':{t:'CHEST PAIN — EMERGENCY',c:'red',m:'EMERGENCY — 108 pe call karein ABHI\n\n→ Aspirin 75mg — 4 tablets abhi chaba lein\n→ Akele mat raho — kisi ko jagao\n→ Baithein ya letein, loose kapde karo\n\nYeh WAIT karne ka time NAHI hai.'},
+  '⚠ Severe headache':{t:'Severe headache — URGENT',c:'red',m:'BP check ABHI. 180/110 se zyada — 108 ya hospital. Vision blur ya confusion ho — EMERGENCY.'},
+  '⚠ Sudden numbness':{t:'Sudden numbness — STROKE RISK',c:'red',m:'FAST check:\nFace — ek side jhuk rahi hai?\nArm — ek haath weak ya numb?\nSpeech — bolne mein problem?\n\nANY YES → 108 IMMEDIATELY'},
+};
+
+var P_SYS='You are AfterVisit AI for Rahul Sharma (42, Nagpur, Stage 1 Hypertension). Medicines: Amlodipine 5mg morning, Telmisartan 40mg night, Aspirin 75mg morning. BP 134/86 (improved from 148/92). Lab: Fasting sugar 112 mg/dL (pre-diabetic). Doctor: Dr. Rajan Deshmukh, City Hospital. Next visit: June 3 2026. Reply in Hindi/Hinglish/English matching patient. Keep SHORT (3-4 lines). Never diagnose. For chest pain/emergency always say call 108 immediately.';
+var D_SYS='You are AfterVisit Clinical AI for Dr. Rajan Deshmukh (MD Cardiology, Nagpur). Active patients: Rahul Sharma (HTN 94% compliance), Suresh Gupta (HTN+CAD emergency last night), Ravi Tiwari (Heart failure 45% compliance, Metoprolol side effects), Meena Joshi (T2DM 88%), Anita Sharma (DM+HTN 78%). Give evidence-based clinical guidance. Reference Indian context. Be concise. This is AI assistance only.';
+
+// ═══ AUTH ═══
+function showTab(t){
+  document.getElementById('form-signin').style.display=t==='signin'?'block':'none';
+  document.getElementById('form-register').style.display=t==='register'?'block':'none';
+  document.getElementById('t-signin').classList.toggle('on',t==='signin');
+  document.getElementById('t-register').classList.toggle('on',t==='register');
+}
+
+function doLogin(){
+  var e=document.getElementById('l-email').value.trim();
+  var p=document.getElementById('l-pass').value.trim();
+  var r=document.getElementById('l-role').value;
+  if(!e||!p){showToast('Please enter email and password','e');return;}
+  enterApp(r,e.split('@')[0].replace(/[^a-zA-Z ]/g,'')||'User');
+}
+
+function doRegister(){
+  var n=document.getElementById('r-name').value.trim();
+  var e=document.getElementById('r-email').value.trim();
+  var ph=document.getElementById('r-phone').value.trim();
+  var c=document.getElementById('r-city').value.trim();
+  var r=document.getElementById('r-role').value;
+  var p=document.getElementById('r-pass').value.trim();
+  if(!n||!e||!ph||!c||!p){showToast('Please fill all fields','e');return;}
+  enterApp(r,n);
+}
+
+function demoLogin(r){
+  enterApp(r,r==='patient'?'Rahul Sharma':'Dr. Rajan Deshmukh');
+}
+
+function enterApp(r,name){
+  ROLE=r;UNAME=name;
+  document.getElementById('s-login').classList.remove('show');
+  document.getElementById('s-app').classList.add('show');
+  var initials=name.split(' ').map(function(n){return n[0];}).join('').toUpperCase().slice(0,2);
+  var av=document.getElementById('sb-av');
+  av.textContent=initials;
+  av.className='sb-av '+(r==='patient'?'p':'d');
+  document.getElementById('sb-name').textContent=name;
+  document.getElementById('sb-role').textContent=r==='patient'?'Patient Portal':'Doctor Portal';
+  buildNav(r);
+  navTo(r==='patient'?'p-overview':'d-dashboard');
+}
+
+function signOut(){
+  ROLE='';UNAME='';PAGE='';
+  document.getElementById('s-app').classList.remove('show');
+  document.getElementById('s-login').classList.add('show');
+  document.getElementById('l-email').value='';
+  document.getElementById('l-pass').value='';
+}
+
+// ═══ NAV ═══
+var P_NAV=[
+  {sec:'My Care',items:[
+    {id:'p-overview',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',lbl:'Overview'},
+    {id:'p-visits',icon:'<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',lbl:'Visit History'},
+    {id:'p-medicines',icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',lbl:'Medicines'},
+    {id:'p-lab',icon:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',lbl:'Lab Reports'},
+    {id:'p-symptoms',icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',lbl:'Symptom Check'},
+  ]},
+  {sec:'Support',items:[
+    {id:'p-ai',icon:'<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',lbl:'Ask AI',badge:'24/7',bc:'nb-teal'},
+    {id:'p-followup',icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',lbl:'Follow-ups'},
+    {id:'p-alerts',icon:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>',lbl:'Alerts',badge:'2',bc:'nb-red'},
+  ]}
+];
+
+var D_NAV=[
+  {sec:'Clinic',items:[
+    {id:'d-dashboard',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',lbl:'Dashboard'},
+    {id:'d-patients',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',lbl:'All Patients'},
+    {id:'d-opd',icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',lbl:"Today's OPD"},
+    {id:'d-transcripts',icon:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',lbl:'AI Transcripts'},
+    {id:'d-scribe',icon:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',lbl:'AI Scribe',badge:'NEW',bc:'nb-teal'},
+  ]},
+  {sec:'Alerts & Reports',items:[
+    {id:'d-escalations',icon:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',lbl:'Escalations',badge:'2',bc:'nb-red'},
+    {id:'d-compliance',icon:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',lbl:'Compliance Report'},
+    {id:'d-pending',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',lbl:'Pending Follow-ups',badge:'4',bc:'nb-teal'},
+    {id:'d-ai',icon:'<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',lbl:'AI Assistant'},
+  ]}
+];
+
+var PAGE_TITLES={
+  'p-overview':'Overview','p-visits':'Visit History','p-medicines':'Medicines',
+  'p-lab':'Lab Reports','p-symptoms':'Symptom Check','p-ai':'Ask AI',
+  'p-followup':'Follow-ups','p-alerts':'Alerts',
+  'd-dashboard':'Dashboard','d-patients':'All Patients','d-opd':"Today's OPD",
+  'd-transcripts':'AI Transcripts','d-escalations':'Escalations',
+  'd-scribe':'AI Scribe — Voice to Hindi Summary',
+  'd-compliance':'Compliance Report','d-pending':'Pending Follow-ups','d-ai':'AI Assistant'
+};
+
+function buildNav(r){
+  var nav=document.getElementById('sb-nav');
+  nav.innerHTML='';
+  var cfg=r==='patient'?P_NAV:D_NAV;
+  cfg.forEach(function(sec){
+    var s=document.createElement('div');s.className='sb-sec';s.textContent=sec.sec;nav.appendChild(s);
+    sec.items.forEach(function(item){
+      var el=document.createElement('div');
+      el.className='nav-item'+(r==='doctor'?' doc':'');
+      el.id='n-'+item.id;
+      el.innerHTML='<svg viewBox="0 0 24 24">'+item.icon+'</svg>'+item.lbl+(item.badge?'<span class="nav-badge '+item.bc+'">'+item.badge+'</span>':'');
+      el.onclick=(function(id){return function(){navTo(id);};})(item.id);
+      nav.appendChild(el);
+    });
+  });
+}
+
+function navTo(id){
+  PAGE=id;
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('on');});
+  var ni=document.getElementById('n-'+id);
+  if(ni)ni.classList.add('on');
+  document.getElementById('tb-title').textContent=PAGE_TITLES[id]||id;
+  var pw=document.getElementById('pages');
+  pw.innerHTML='';
+  var pg=document.createElement('div');pg.className='page on';pw.appendChild(pg);
+  if(id.startsWith('p-'))renderP(id,pg);
+  else renderD(id,pg);
+}
+
+// ═══ HELPERS ═══
+function tag(cls,text){return '<span class="tag '+cls+'">'+text+'</span>';}
+function card(html,mb){return '<div class="card'+(mb===false?'':' mb14')+'">'+html+'</div>';}
+function stat(label,val,color,trend){return '<div class="stat-card"><div class="stat-l">'+label+'</div><div class="stat-n" style="color:'+color+'">'+val+'</div>'+(trend?'<div class="stat-t">'+trend+'</div>':'')+'</div>';}
+function bar(lbl,val,color){return '<div class="bar-row"><div class="bar-lbl">'+lbl+'</div><div class="bar-track"><div class="bar-fill" style="width:'+val+'%;background:'+color+'"></div></div><div class="bar-val" style="color:'+color+'">'+val+'%</div></div>';}
+function tlItem(title,desc,time,dotColor){return '<div class="tl-item"><div class="tl-dot" style="border-color:'+dotColor+'"></div><div class="tl-body"><div class="tl-title">'+title+'</div><div class="tl-desc">'+desc+'</div><div class="tl-time">'+time+'</div></div></div>';}
+function alertBox(type,title,desc){var ic=type==='red'?'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';return '<div class="alert alert-'+type+'"><div class="alert-icon"><svg viewBox="0 0 24 24">'+ic+'</svg></div><div><div class="alert-t">'+title+'</div><div class="alert-d">'+desc+'</div></div></div>';}
+
+function showToast(msg,t){
+  var existing=document.querySelector('.toast');
+  if(existing)existing.remove();
+  var el=document.createElement('div');
+  el.className='toast toast-'+(t==='e'?'e':'s');
+  el.textContent=(t==='e'?'':'✓ ')+msg;
+  document.body.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove();},2500);
+}
+
+function openModal(html){
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+// ═══ PATIENT PAGES ═══
+function renderP(id,el){
+  var now=new Date();
+  var hr=now.getHours();
+  var greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  var fn=UNAME.split(' ')[0];
+  var dateStr=now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  if(id==='p-overview'){
+    el.innerHTML='<div class="pg-title">'+greet+', <span style="color:var(--teal)">'+fn+'</span> 👋</div>'
+      +'<div class="pg-sub">'+dateStr+' · Last visit: 3 days ago</div>'
+      +alertBox('red','Fasting sugar elevated — pre-diabetic range','Your CBC shows fasting sugar at 112 mg/dL. Reduce sweets and white rice from today. Discuss with Dr. Deshmukh on June 3.')
+      +'<div class="g4">'
+        +stat('Medicine compliance','94%','var(--green)','↑ Up 6% this month')
+        +stat('BP last reading','134/86','var(--amber)','↓ Improved from 148/92')
+        +stat('Next follow-up','Jun 3','var(--blue)','14 days away')
+        +stat('Visits this year','4','var(--teal)','On track')
+      +'</div>'
+      +'<div class="g2">'
+        +'<div class="card mb14"><div class="sec-title">Today\'s medicines</div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:32px;height:32px;border-radius:9px;background:var(--teal2);display:flex;align-items:center;justify-content:center;border:1px solid var(--tealB)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Amlodipine 5mg</div><div class="med-info">Subah 8 AM · Khane ke baad</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="med-dose" style="color:var(--teal)">5mg</span><button class="chk done" id="med1" onclick="toggleMed(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button></div></div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:32px;height:32px;border-radius:9px;background:var(--blue2);display:flex;align-items:center;justify-content:center;border:1px solid var(--blueB)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Telmisartan 40mg</div><div class="med-info">Raat 9 PM · Khane se pehle</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="med-dose" style="color:var(--blue)">40mg</span><button class="chk" id="med2" onclick="toggleMed(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button></div></div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:32px;height:32px;border-radius:9px;background:var(--amber2);display:flex;align-items:center;justify-content:center;border:1px solid var(--amberB)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Aspirin 75mg</div><div class="med-info">Subah 8 AM · Khane ke baad</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="med-dose" style="color:var(--amber)">75mg</span><button class="chk done" id="med3" onclick="toggleMed(this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button></div></div>'
+        +'</div>'
+        +'<div class="card mb14" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px"><div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em">30-day compliance</div>'
+          +'<div class="ring-wrap"><svg width="100" height="100" viewBox="0 0 100 100" style="transform:rotate(-90deg)"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg4)" stroke-width="7"/><circle cx="50" cy="50" r="42" fill="none" stroke="var(--teal)" stroke-width="7" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="15.8"/></svg><div class="ring-center"><div class="ring-num" style="color:var(--teal)">94%</div><div class="ring-lbl">On-time doses</div></div></div>'
+          +'<div style="display:flex;gap:16px"><div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--green)">28</div><div style="font-size:9px;color:var(--t3)">ON TIME</div></div><div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--amber)">1</div><div style="font-size:9px;color:var(--t3)">LATE</div></div><div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--red)">1</div><div style="font-size:9px;color:var(--t3)">MISSED</div></div></div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="card"><div class="sec-title">Recent activity</div><div class="tl">'
+        +tlItem('Visit summary received','Dr. Deshmukh · BP 134/86 · Medicines reviewed · Follow-up June 3','Today · 11:32 AM','var(--teal)')
+        +tlItem('Lab result flagged — fasting sugar elevated','Sugar 112 mg/dL (pre-diabetic). Discuss with doctor on June 3.','Today · 11:33 AM','var(--red)')
+        +tlItem('AI question answered','"Kya subah chai pi sakta hoon?" — AI replied with caffeine guidance for BP patients','Yesterday · 7:14 AM','var(--blue)')
+        +tlItem('All medicines taken on time','Amlodipine · Telmisartan · Aspirin — all confirmed on time, morning and night','18 May · 9:00 PM','var(--green)')
+      +'</div></div>';
+  }
+
+  else if(id==='p-visits'){
+    el.innerHTML='<div class="pg-title">Visit <span style="color:var(--teal)">History</span></div><div class="pg-sub">All doctor visits — click to read full summary and instructions</div>';
+    VISITS.forEach(function(v,i){
+      var vc=document.createElement('div');
+      vc.style.cssText='background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:15px;margin-bottom:11px;cursor:pointer;transition:border-color .2s';
+      vc.onmouseenter=function(){this.style.borderColor='var(--b2)';};
+      vc.onmouseleave=function(){this.style.borderColor='var(--b1)';};
+      vc.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div><div style="font-size:13px;font-weight:700">'+v.doc+'</div><div style="font-size:11px;color:var(--t2);margin-bottom:0">'+v.spec+'</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--t3)">'+v.date+'</div>'+(i===0?'<span class="tag tg" style="margin-top:3px;display:inline-block">Latest</span>':'')+'</div></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:9px;font-style:italic">'+v.quote+'</div>'
+        +'<div style="display:flex;gap:5px;flex-wrap:wrap">'+v.tags.map(function(t){return tag(t[0],t[1]);}).join('')+'</div>';
+      vc.onclick=(function(vi){return function(){showVisitModal(vi);};})(i);
+      el.appendChild(vc);
+    });
+  }
+
+  else if(id==='p-medicines'){
+    el.innerHTML='<div class="pg-title">My <span style="color:var(--teal)">Medicines</span></div>'
+      +'<div class="pg-sub">Current prescriptions, schedules, and 30-day adherence</div>'
+      +alertBox('amber','Telmisartan running low — 5 days left','Please refill before June 1. Missing this BP medicine can cause dangerous BP spikes.')
+      +'<div class="g2">'
+        +'<div class="card mb14"><div class="sec-title">Current prescriptions</div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:8px;background:var(--teal2);border:1px solid var(--tealB);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Amlodipine 5mg</div><div class="med-info">Subah 8 AM · After food · Blood pressure</div></div></div><span class="tag tg">28 left</span></div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:8px;background:var(--amber2);border:1px solid var(--amberB);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Telmisartan 40mg</div><div class="med-info">Raat 9 PM · Before food · Blood pressure</div></div></div><span class="tag tr">5 left ⚠</span></div>'
+          +'<div class="med-row"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:8px;background:var(--red2);border:1px solid var(--redB);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="med-name">Aspirin 75mg</div><div class="med-info">Subah 8 AM · After food · Blood thinner</div></div></div><span class="tag tg">25 left</span></div>'
+        +'</div>'
+        +'<div class="card mb14"><div class="sec-title">Weekly adherence</div>'
+          +bar('Amlodipine',100,'var(--green)')+bar('Telmisartan',86,'var(--amber)')+bar('Aspirin',100,'var(--green)')
+          +'<div style="background:var(--bg3);border-radius:9px;padding:11px;font-size:11px;color:var(--t2);line-height:1.6;border:1px solid var(--b1);margin-top:12px"><strong style="color:var(--t1)">AI note:</strong> You missed Telmisartan once last week. Missing BP medicine can cause BP spikes. Set a phone alarm for 9 PM daily.</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="card"><div class="sec-title">May 2026 — Daily log</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(d){return '<div style="font-size:9px;color:var(--t3);text-align:center;font-weight:600">'+d+'</div>';}).join('')+'</div>'
+        +'<div class="hm-grid" id="hm"></div>'
+        +'<div style="display:flex;gap:12px;margin-top:9px;font-size:10px;color:var(--t3)">'
+          +'<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--green2);border:1px solid var(--greenB)"></div>All taken</div>'
+          +'<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--amber2);border:1px solid var(--amberB)"></div>Partial</div>'
+          +'<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--red2);border:1px solid var(--redB)"></div>Missed</div>'
+        +'</div>'
+      +'</div>';
+    buildHeatmap();
+  }
+
+  else if(id==='p-lab'){
+    el.innerHTML='<div class="pg-title">Lab <span style="color:var(--teal)">Reports</span></div>'
+      +'<div class="pg-sub">AI-explained results — abnormal values flagged automatically</div>'
+      +'<div class="card">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div><div style="font-size:14px;font-weight:700;margin-bottom:2px">Complete Blood Count + Lipid Profile</div><div style="font-size:11px;color:var(--t3)">18 May 2026 · City Diagnostic Lab, Nagpur</div></div>'+tag('ta','1 flag')+'</div>'
+        +'<div class="lab-row"><div><div class="lab-name">Haemoglobin</div><div class="lab-range">Normal: 13.0–17.0 g/dL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--green)">14.2</div><div style="font-size:10px;color:var(--t3)">g/dL ✓</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">WBC Count</div><div class="lab-range">Normal: 4,000–11,000 /μL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--green)">7,400</div><div style="font-size:10px;color:var(--t3)">/μL ✓</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">Platelets</div><div class="lab-range">Normal: 1.5–4.0 lakh /μL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--green)">2.1L</div><div style="font-size:10px;color:var(--t3)">/μL ✓</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">Fasting Blood Sugar</div><div class="lab-range">Normal: 70–100 mg/dL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--red)">112</div><div style="font-size:10px;color:var(--red)">mg/dL ⚠</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">Total Cholesterol</div><div class="lab-range">Normal: &lt;200 mg/dL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--amber)">194</div><div style="font-size:10px;color:var(--t3)">mg/dL</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">HDL Cholesterol</div><div class="lab-range">Normal: &gt;40 mg/dL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--green)">52</div><div style="font-size:10px;color:var(--t3)">mg/dL ✓</div></div></div>'
+        +'<div class="lab-row"><div><div class="lab-name">Serum Creatinine</div><div class="lab-range">Normal: 0.7–1.2 mg/dL</div></div><div style="text-align:right"><div class="lab-val" style="color:var(--green)">0.9</div><div style="font-size:10px;color:var(--t3)">mg/dL ✓</div></div></div>'
+        +'<div style="background:var(--red2);border:1px solid var(--redB);border-radius:10px;padding:13px;margin-top:14px"><div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">AI — Flag explanation</div><div style="font-size:12px;color:rgba(255,100,120,.9);line-height:1.75"><strong>Fasting sugar 112 mg/dL</strong> — Pre-diabetic range (100–125). Diabetes nahi hai abhi, lekin risk hai. Iska matlab body insulin properly use nahi kar pa rahi. Steps abhi se: white rice, maida, meetha kam karo. More vegetables, dal, roti. June 3 ko Dr. Deshmukh se zaroor batao.</div></div>'
+      +'</div>';
+  }
+
+  else if(id==='p-symptoms'){
+    el.innerHTML='<div class="pg-title">Symptom <span style="color:var(--teal)">Check</span></div>'
+      +'<div class="pg-sub">Tell the AI what you feel — guidance based on your medical history</div>'
+      +alertBox('red','Emergency symptoms — DO NOT use this tool','Chest pain, breathlessness, severe headache, sudden weakness — call 108 immediately.')
+      +'<div class="card"><div class="sec-title">What are you experiencing today?</div>'
+        +'<div class="sym-grid" id="sym-grid"></div>'
+        +'<div class="sym-result" id="sym-result"></div>'
+      +'</div>';
+    var sg=document.getElementById('sym-grid');
+    Object.keys(SYM_DATA).forEach(function(k){
+      var s=SYM_DATA[k];
+      var btn=document.createElement('button');
+      btn.className='sym-btn'+(s.c==='red'?' urg':'');
+      btn.textContent=k;
+      btn.onclick=(function(key,sym){return function(){
+        document.querySelectorAll('.sym-btn').forEach(function(b){b.classList.remove('on');});
+        this.classList.add('on');
+        var r=document.getElementById('sym-result');
+        r.style.display='block';
+        var cols={red:['var(--red2)','var(--redB)','var(--red)'],amber:['var(--amber2)','var(--amberB)','var(--amber)'],green:['var(--green2)','var(--greenB)','var(--green)']};
+        var c=cols[sym.c]||cols.amber;
+        r.style.background=c[0];r.style.borderColor=c[1];
+        r.innerHTML='<div style="font-size:11px;font-weight:700;color:'+c[2]+';text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">'+sym.t+'</div><div style="color:var(--t1)">'+sym.m+'</div>';
+      };})(k,s);
+      sg.appendChild(btn);
+    });
+  }
+
+  else if(id==='p-ai'){
+    el.innerHTML='<div class="pg-title">Ask <span style="color:var(--teal)">AI</span></div>'
+      +'<div class="pg-sub">Powered by Claude — knows your complete medical history and medicines</div>'
+      +'<div class="g2 mb14">'
+        +'<div class="card" style="margin-bottom:0"><div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Your health context loaded</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+tag('tg','Hypertension Stage 1')+tag('tb','3 active medicines')+tag('ta','Sugar: monitor')+'</div></div>'
+        +'<div class="card" style="margin-bottom:0"><div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Quick questions</div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="qr-btn" onclick="setChat(\'p-inp\',\'Medicine timing kya hai meri?\')">Medicine timing</button><button class="qr-btn" onclick="setChat(\'p-inp\',\'BP 138/88 aya — kya karna chahiye?\')">BP reading</button><button class="qr-btn" onclick="setChat(\'p-inp\',\'Chai pi sakta hoon?\')">Chai OK?</button></div></div>'
+      +'</div>';
+    el.appendChild(buildChat('p-inp','p-msgs',false,'Namaste! Main aapki complete history jaanta hoon — Dr. Deshmukh ki visits, teeno medicines, aur lab reports. Koi bhi sawaal poochho — Hindi mein bilkul theek hai.',['Medicine timing kya hai?','Sugar 112 — kya karein?','Telmisartan bhool gaya kal','Exercise kar sakta hoon?']));
+  }
+
+  else if(id==='p-followup'){
+    el.innerHTML='<div class="pg-title">Follow-up <span style="color:var(--teal)">Schedule</span></div>'
+      +'<div class="pg-sub">Upcoming appointments and pending tests</div>'
+      +'<div class="g2">'
+        +'<div class="card" style="border-color:var(--tealB);margin-bottom:0"><span class="tag tg">Confirmed</span><div style="font-size:15px;font-weight:700;margin:10px 0 2px">Dr. Rajan Deshmukh</div><div style="font-size:12px;color:var(--t2);margin-bottom:12px">MD Cardiology · City Hospital, Nagpur · OPD Room 4</div><div style="font-size:16px;font-weight:700;color:var(--teal);margin-bottom:2px">Tuesday, 3 June 2026</div><div style="font-size:12px;color:var(--t2);margin-bottom:12px">10:30 AM · Estimated wait: 20–30 min</div><div style="background:var(--bg3);border-radius:9px;padding:11px;font-size:11px;color:var(--t2);line-height:1.7;border:1px solid var(--b1)"><strong style="color:var(--t1)">What to bring:</strong><br>→ BP diary (last 2 weeks of readings)<br>→ Latest CBC lab report (18 May)<br>→ <span style="color:var(--red);font-weight:600">Mention fasting sugar 112 — important</span><br>→ List any new symptoms</div></div>'
+        +'<div class="card" style="margin-bottom:0"><span class="tag ta">Action needed</span><div style="font-size:15px;font-weight:700;margin:10px 0 2px">Annual Blood Work</div><div style="font-size:12px;color:var(--t2);margin-bottom:12px">Schedule before August 2026</div><div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">Tests needed: HbA1c, Lipid profile, Kidney function (urea + creatinine), Uric acid, Thyroid (TSH). With fasting sugar elevated, HbA1c is now priority.</div><button class="act-btn act-teal" onclick="showToast(\'Reminder set for 1 June 2026\')">Set Reminder for June 1 →</button></div>'
+      +'</div>';
+  }
+
+  else if(id==='p-alerts'){
+    el.innerHTML='<div class="pg-title">Alerts & <span style="color:var(--teal)">Notifications</span></div>'
+      +'<div class="pg-sub">Important health updates that need your attention</div>'
+      +'<div class="card mb14" style="border-color:var(--redB)">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:var(--red)"></div>'+tag('tr','Unread')+'</div><span style="font-size:10px;color:var(--t3)">Today · 11:33 AM</span></div>'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:5px">Fasting sugar elevated — pre-diabetic range</div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.6">CBC shows fasting sugar 112 mg/dL. Action: reduce sweets and white rice from today. Discuss with Dr. Deshmukh on June 3. No panic — this is manageable with diet changes.</div>'
+      +'</div>'
+      +'<div class="card mb14" style="border-color:var(--amberB)">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:var(--amber)"></div>'+tag('ta','Unread')+'</div><span style="font-size:10px;color:var(--t3)">Yesterday · 6:00 PM</span></div>'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:5px">Telmisartan supply running low</div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.6">You have approximately 5 doses remaining. Please refill before June 1. Missing this BP medicine can cause dangerous BP spikes.</div>'
+      +'</div>'
+      +'<div class="card" style="opacity:.6">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+tag('tg','Read')+'<span style="font-size:10px;color:var(--t3)">18 May · 9:00 AM</span></div>'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:5px">Follow-up reminder — June 3 appointment confirmed</div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.6">Your cardiology follow-up with Dr. Deshmukh is confirmed for June 3 at 10:30 AM.</div>'
+      +'</div>';
+  }
+}
+
+// ═══ DOCTOR PAGES ═══
+function renderD(id,el){
+  var now=new Date();
+  var hr=now.getHours();
+  var greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  var dname=UNAME.replace('Dr. ','').split(' ')[0];
+  var dateStr=now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  if(id==='d-dashboard'){
+    el.innerHTML='<div class="pg-title">'+greet+', <span style="color:var(--blue)">Dr. '+dname+'</span></div>'
+      +'<div class="pg-sub">'+dateStr+' · 18 active patients · 2 urgent alerts</div>'
+      +'<div class="alert alert-red" style="cursor:pointer" onclick="navTo(\'d-escalations\')">'
+        +'<div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'
+        +'<div style="flex:1"><div class="alert-t">URGENT — Suresh Gupta reported chest pain at 2:14 AM</div><div class="alert-d">AI escalated immediately. Patient directed to City Hospital emergency. Confirmed he went. Follow-up today 3 PM — ECG results needed. Click to review escalation.</div></div>'
+      +'</div>'
+      +'<div class="g4">'
+        +stat('Patients today','12','var(--blue)','8 seen · 4 remaining')
+        +stat('Avg compliance','87%','var(--green)','↑ +12% since AfterVisit')
+        +stat('Pending follow-ups','4','var(--amber)','2 overdue')
+        +stat('AI auto-answered','47','var(--teal)','This week · automated')
+      +'</div>'
+      +'<div class="g2">'
+        +'<div class="card mb14"><div class="sec-title">Today\'s remaining OPD</div>'
+          +'<div class="sch-row"><span class="sch-time">2:00 PM</span><div style="flex:1"><div style="font-size:12px;font-weight:600">Meena Joshi</div><div style="font-size:11px;color:var(--t2)">Follow-up · Diabetes · HbA1c to review</div></div>'+tag('tg','On time')+'</div>'
+          +'<div class="sch-row"><span class="sch-time">2:30 PM</span><div style="flex:1"><div style="font-size:12px;font-weight:600">Vikram Nair</div><div style="font-size:11px;color:var(--t2)">New patient · Referred · Palpitations</div></div>'+tag('tb','New')+'</div>'
+          +'<div class="sch-row"><span class="sch-time">3:00 PM</span><div style="flex:1"><div style="font-size:12px;font-weight:600">Suresh Gupta</div><div style="font-size:11px;color:var(--t2)">Emergency follow-up · Chest pain last night</div></div>'+tag('tr','Urgent')+'</div>'
+          +'<div class="sch-row"><span class="sch-time">3:30 PM</span><div style="flex:1"><div style="font-size:12px;font-weight:600">Anita Sharma</div><div style="font-size:11px;color:var(--t2)">6-month review · DM + HTN</div></div>'+tag('tb','Review')+'</div>'
+        +'</div>'
+        +'<div class="card mb14"><div class="sec-title">Patient compliance overview</div>'
+          +bar('Rahul Sharma',94,'var(--green)')+bar('Meena Joshi',88,'var(--teal)')+bar('Suresh Gupta',62,'var(--amber)')+bar('Anita Sharma',78,'var(--teal)')+bar('Ravi Tiwari',45,'var(--red)')
+          +'<div style="background:var(--red2);border:1px solid var(--redB);border-radius:9px;padding:10px;font-size:11px;color:rgba(255,100,120,.9);line-height:1.6;margin-top:10px">Ravi Tiwari — only 45% compliance. Side effects reported to AI but NOT at OPD. Call today.</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="card"><div class="sec-title">Today\'s activity</div><div class="tl">'
+        +tlItem('Emergency escalation — Suresh Gupta chest pain','AI detected at 2:14 AM. Directed to hospital. You were alerted. Patient confirmed going.','2:14 AM','var(--red)')
+        +tlItem('Visit summary sent — Rahul Sharma','Post-visit summary delivered. Medicine reminders activated. Sugar flag sent to patient.','11:33 AM','var(--teal)')
+        +tlItem('AI answered 8 patient questions today','Rahul (3), Meena (2), Anita (2), Suresh (1) — all routine. No escalation needed.','Throughout day','var(--blue)')
+        +tlItem('Ravi Tiwari — low compliance auto-alert','45% compliance for Metoprolol. Auto-reminder sent. Manual follow-up recommended.','9:00 AM · auto','var(--amber)')
+      +'</div></div>';
+  }
+
+  else if(id==='d-patients'){
+    el.innerHTML='<div class="pg-title">All <span style="color:var(--blue)">Patients</span></div>'
+      +'<div class="pg-sub">18 active patients — click any row for full profile and AI flags</div>'
+      +'<div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">'
+        +'<button class="act-btn act-blue" onclick="showToast(\'Showing all 18 patients\')">All (18)</button>'
+        +'<button class="act-btn act-grey" onclick="showToast(\'Filtered: Low compliance\')">Low compliance ⚠ (3)</button>'
+        +'<button class="act-btn act-grey" onclick="showToast(\'Filtered: Follow-up due\')">Follow-up due (4)</button>'
+        +'<button class="act-btn act-red" onclick="showToast(\'Filtered: Urgent\')">Urgent (1)</button>'
+      +'</div>'
+      +'<div class="card" style="padding:0;overflow:hidden">'
+        +'<table class="pt-table"><thead><tr><th style="width:22%;padding:0 10px 9px">Patient</th><th style="width:14%">Condition</th><th style="width:10%">Last visit</th><th style="width:15%">Compliance</th><th style="width:13%">AI activity</th><th style="width:13%">Status</th><th style="width:13%">Action</th></tr></thead><tbody id="pt-tbody"></tbody></table>'
+      +'</div>';
+    var tb=document.getElementById('pt-tbody');
+    PATIENTS.forEach(function(p,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue2);color:var(--blue);border:1px solid var(--blueB);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">'+p.init+'</div><div><div style="font-size:12px;font-weight:600">'+p.name+'</div><div style="font-size:10px;color:var(--t3)">'+p.sub+'</div></div></div></td>'
+        +'<td>'+tag(p.ct,p.cond)+'</td>'
+        +'<td style="font-size:10px;color:var(--t3)">'+(i===0?'20 May':i===1?'15 Apr':i===2?'5 May':i===3?'2 Apr':'1 May')+'</td>'
+        +'<td><div style="font-size:11px;font-weight:700;color:'+p.cc+';margin-bottom:2px">'+p.comp+'%</div><div class="comp-bar"><div style="height:100%;width:'+p.comp+'%;background:'+p.cc+'"></div></div></td>'
+        +'<td>'+tag(p.at,p.ai)+'</td>'
+        +'<td>'+tag(p.st,p.status)+'</td>'
+        +'<td><button class="act-btn '+(p.urgent?'act-red':'act-blue')+'" data-idx="'+i+'">'+(p.urgent?'Urgent':'Profile')+'</button></td>';
+      tr.querySelector('button').onclick=(function(idx){return function(e){e.stopPropagation();showPtModal(idx);};})(i);
+      tr.onclick=(function(idx){return function(){showPtModal(idx);};})(i);
+      tb.appendChild(tr);
+    });
+  }
+
+  else if(id==='d-opd'){
+    el.innerHTML='<div class="pg-title">Today\'s <span style="color:var(--blue)">OPD</span></div>'
+      +'<div class="pg-sub">20 May 2026 · 12 patients · 8 seen · 4 remaining</div>'
+      +'<div class="g3 mb14">'+stat('Completed','8','var(--green)','')+stat('Remaining','4','var(--amber)','')+stat('Urgent','1','var(--red)','')+'</div>'
+      +'<div class="card" style="padding:0;overflow:hidden">'
+        +'<table class="pt-table"><thead><tr><th style="width:9%">Time</th><th style="width:18%">Patient</th><th style="width:11%">Type</th><th style="width:30%">AfterVisit prep</th><th style="width:10%">Status</th><th style="width:22%">Action</th></tr></thead><tbody>'
+          +[['10:00','Rahul Sharma','Follow-up','tb','BP diary, 94% compliance, sugar 112 flagged','tgr','Seen','act-teal'],
+            ['10:30','Priya Kulkarni','New patient','tb','No prior history — first AfterVisit setup today','tgr','Seen','act-teal'],
+            ['11:00','Deepak Verma','Review','tb','AI flagged: 4 side effect questions this week','tgr','Seen','act-teal'],
+            ['11:30','Geeta Rao','Lab review','ta','Cholesterol 228 — AI explained to patient','tgr','Seen','act-teal'],
+            ['2:00','Meena Joshi','Follow-up','tb','HbA1c 7.2%, compliance 88%, daughter helping with meds','ta','Waiting',''],
+            ['2:30','Vikram Nair','New','tb','No history — setup AfterVisit after visit','ta','Waiting',''],
+            ['3:00','Suresh Gupta','Urgent','tr','Chest pain 2:14 AM · City Hospital visited · ECG pending','tr','Urgent','act-red'],
+            ['3:30','Anita Sharma','6-month','tb','DM+HTN both stable, 78% compliance, neuropathy concern','ta','Waiting',''],
+          ].map(function(o){return '<tr><td style="font-size:10px;color:var(--t3)">'+o[0]+'</td><td style="font-size:12px;font-weight:600">'+o[1]+'</td><td>'+tag(o[3],o[2])+'</td><td style="font-size:11px;color:var(--t2)">'+o[4]+'</td><td>'+tag(o[5],o[6])+'</td><td>'+(o[7]?'<button class="act-btn '+o[7]+'" onclick="showToast(\''+(o[6]==='Seen'?'Summary sent to '+o[1]:'Opening emergency file')+'\')">'+(o[6]==='Seen'?'Send summary':'Review urgent')+'</button>':'<span style="font-size:11px;color:var(--t3)">Pending</span>')+'</td></tr>';}).join('')
+        +'</tbody></table>'
+      +'</div>';
+  }
+
+  else if(id==='d-transcripts'){
+    el.innerHTML='<div class="pg-title">AI <span style="color:var(--blue)">Transcripts</span></div>'
+      +'<div class="pg-sub">What your patients asked the AI — and how it responded</div>';
+    var trs=[
+      {name:'Suresh Gupta',sub:'60 · HTN + CAD',tag:'tr',tagL:'Emergency escalated',time:'2:14 AM · Today',border:'var(--redB)',
+       msgs:[{t:'pt',m:'Bhai mujhe seene mein dard ho raha hai. Kaafi der se hai. Raat ke 2 baj rahe hain.'},{t:'ai',m:'⚠ SURESH JI — SEENE KA DARD SERIOUS HO SAKTA HAI.\n\nABHI YEH KAREIN:\n→ 108 pe call karein ABHI\n→ Ya kisi ko seedha City Hospital le jaane bolein\n\nDr. Deshmukh ko ALERT bhej diya hai. Mat ruko.'},{t:'pt',m:'Meri biwi hai. Hum ja rahe hain.'},{t:'ai',m:'Bilkul sahi decision. Emergency admission fast hoti hai. Safe rahe. 🙏'}],
+       note:{c:'red',text:'Action needed: Hospital records request karein — ECG aur troponin results check karein before his today 3 PM visit.'}},
+      {name:'Rahul Sharma',sub:'42 · Hypertension',tag:'tg',tagL:'Routine Q&A',time:'7:14 AM · Yesterday',border:'var(--b1)',
+       msgs:[{t:'pt',m:'Kya subah chai pi sakta hoon pehle phir medicine?'},{t:'ai',m:'Haan Rahul ji — ek cup chai theek hai. Amlodipine aur Aspirin khane ke baad lena hai, chai se koi issue nahi. Sirf 2 cup se zyada avoid karein — caffeine BP thoda badha sakta hai.'}],
+       note:null},
+      {name:'Ravi Tiwari',sub:'55 · Heart failure · 45% compliance',tag:'ta',tagL:'Compliance issue',time:'3 days ago',border:'var(--amberB)',
+       msgs:[{t:'pt',m:'Yaar yeh Metoprolol tablet se mujhe neend bahut aati hai din mein. Toh kabhi kabhi nahi le raha.'},{t:'ai',m:'Ravi ji, yeh side effect real hai — Metoprolol se daytime fatigue hoti hai kuch logon ko. Lekin heart failure mein yeh medicine band karna bahut risky hai — sudden BP spike ya cardiac event ho sakta hai. Please kal hi Dr. Deshmukh ko yeh batayein — woh timing ya dose adjust kar sakte hain. Tab tak lena mat bhoolein.'}],
+       note:{c:'amber',text:'Doctor note: Ravi never mentioned side effects in OPD. Consider switching to Carvedilol or adjusting Metoprolol timing to bedtime. Schedule urgent call.'}},
+    ];
+    trs.forEach(function(tr){
+      var c=document.createElement('div');
+      c.className='tr-wrap';c.style.borderColor=tr.border;
+      c.innerHTML='<div class="tr-hdr"><div><div style="font-size:13px;font-weight:700">'+tr.name+'</div><div style="font-size:11px;color:var(--t3)">'+tr.sub+'</div></div><div style="display:flex;gap:6px;align-items:center">'+tag(tr.tag,tr.tagL)+'<span style="font-size:10px;color:var(--t3)">'+tr.time+'</span></div></div>'
+        +'<div class="tr-msgs">'+tr.msgs.map(function(m){return '<div class="tr-'+m.t+'" style="white-space:pre-line">'+m.m+'</div>';}).join('')+'</div>'
+        +(tr.note?'<div style="margin:0 12px 12px;background:var(--'+tr.note.c+'2);border:1px solid var(--'+tr.note.c+'B);border-radius:9px;padding:10px;font-size:11px;color:rgba(255,'+(tr.note.c==='red'?'100,120':'180,80')+',0.9);line-height:1.6">'+tr.note.text+'</div>':'');
+      el.appendChild(c);
+    });
+  }
+
+  else if(id==='d-escalations'){
+    el.innerHTML='<div class="pg-title"><span style="color:var(--red)">Escalations</span></div>'
+      +'<div class="pg-sub">AI-detected urgent situations requiring your attention</div>'
+      +'<div class="card mb14" style="border-color:var(--redB)">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">'+tag('tr','CRITICAL')+'<span style="font-size:10px;color:var(--t3)">Today · 2:14 AM</span></div>'
+        +'<div style="font-size:14px;font-weight:700;margin-bottom:2px">Suresh Gupta — Chest pain emergency</div>'
+        +'<div style="font-size:12px;color:var(--t2);margin-bottom:14px">60 years · Hypertension + CAD · Known cardiac risk</div>'
+        +'<div style="background:var(--bg3);border-radius:10px;padding:13px;margin-bottom:12px;border:1px solid var(--b1)"><div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px">What AI did in 60 seconds</div><div class="tl">'
+          +tlItem('Symptom detected in 4 seconds','"Seene mein dard" — AI flagged immediately as cardiac emergency','2:14:04 AM','var(--red)')
+          +tlItem('Doctor alerted immediately','Emergency notification sent to you at 2:14 AM','2:14:06 AM','var(--red)')
+          +tlItem('Patient directed to hospital','108 call recommended, City Hospital directions sent, wife asked to accompany','2:14:08 AM','var(--amber)')
+          +tlItem('Patient confirmed going to hospital','"Meri biwi hai. Hum ja rahe hain." — confirmed at 2:17 AM','2:17 AM','var(--green)')
+        +'</div></div>'
+        +'<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="act-btn act-red" onclick="showToast(\'Calling Suresh Gupta...\')">Call patient</button><button class="act-btn act-grey" onclick="showPtModal(1)">View full profile</button><button class="act-btn act-teal" onclick="showToast(\'Escalation marked as resolved\')">Mark resolved</button></div>'
+      +'</div>'
+      +'<div class="card" style="border-color:var(--amberB)">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">'+tag('ta','LOW COMPLIANCE')+'<span style="font-size:10px;color:var(--t3)">3 days ago · Ongoing</span></div>'
+        +'<div style="font-size:14px;font-weight:700;margin-bottom:2px">Ravi Tiwari — 45% compliance on Metoprolol</div>'
+        +'<div style="font-size:12px;color:var(--t2);margin-bottom:12px">55 years · Heart failure · High risk if doses missed</div>'
+        +'<div style="background:var(--amber2);border:1px solid var(--amberB);border-radius:10px;padding:12px;margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Why he\'s missing doses — told AI, not the doctor</div><div style="font-size:12px;color:rgba(245,166,35,.9);line-height:1.7">Patient told AI that Metoprolol causes daytime sleepiness — affecting his work. He stopped taking it sometimes without telling you. This is a known side effect. Medication adjustment or timing change may improve compliance significantly.</div></div>'
+        +'<div style="display:flex;gap:7px"><button class="act-btn act-red" onclick="showToast(\'Calling Ravi Tiwari...\')">Call today</button><button class="act-btn act-grey" onclick="showToast(\'Reminder sent to Ravi Tiwari\')">Send reminder</button><button class="act-btn act-teal" onclick="showToast(\'Clinical note added to profile\')">Add clinical note</button></div>'
+      +'</div>';
+  }
+
+  else if(id==='d-compliance'){
+    el.innerHTML='<div class="pg-title">Compliance <span style="color:var(--blue)">Report</span></div>'
+      +'<div class="pg-sub">Medicine adherence across all 18 active patients — May 2026</div>'
+      +'<div class="g4">'
+        +stat('Average compliance','79%','var(--green)','↑ +12% since AfterVisit')
+        +stat('Perfect compliance ≥90%','8','var(--teal)','patients')
+        +stat('Low compliance <60%','3','var(--red)','patients')
+        +stat('AI reminders sent','342','var(--blue)','This month · automated')
+      +'</div>'
+      +'<div class="g2">'
+        +'<div class="card mb14"><div class="sec-title">Before vs After AfterVisit</div><div style="font-size:11px;color:var(--t3);margin-bottom:12px">Comparison: Feb 2026 (before) vs May 2026 (now)</div>'
+          +'<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Overall compliance</span><span style="color:var(--teal);font-weight:700">67% → 79%</span></div><div style="display:flex;flex-direction:column;gap:3px"><div class="bar-track"><div class="bar-fill" style="width:67%;background:var(--t3)"></div></div><div class="bar-track"><div class="bar-fill" style="width:79%;background:var(--teal)"></div></div></div></div>'
+          +'<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Follow-up rate</span><span style="color:var(--teal);font-weight:700">58% → 81%</span></div><div style="display:flex;flex-direction:column;gap:3px"><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--t3)"></div></div><div class="bar-track"><div class="bar-fill" style="width:81%;background:var(--teal)"></div></div></div></div>'
+          +'<div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Personal calls to doctor</span><span style="color:var(--green);font-weight:700">-65%</span></div><div style="display:flex;flex-direction:column;gap:3px"><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--red)"></div></div><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--green)"></div></div></div></div>'
+          +'<div style="font-size:10px;color:var(--t3);margin-top:10px;font-style:italic">Patient calls to personal number reduced 65% — AI handles routine questions automatically.</div>'
+        +'</div>'
+        +'<div class="card mb14"><div class="sec-title">By medication category</div>'
+          +bar('BP medicines',84,'var(--teal)')+bar('Diabetes',78,'var(--blue)')+bar('Cardiac',62,'var(--amber)')+bar('Thyroid',91,'var(--green)')+bar('Statins',73,'var(--blue)')
+          +'<div style="background:var(--amber2);border:1px solid var(--amberB);border-radius:9px;padding:10px;font-size:11px;color:rgba(245,166,35,.9);line-height:1.6;margin-top:12px">Cardiac medications (62%) need attention. Side effect complaints not reported at OPD — discovered only through AI transcripts. Consider medication counselling.</div>'
+        +'</div>'
+      +'</div>';
+  }
+
+  else if(id==='d-pending'){
+    el.innerHTML='<div class="pg-title">Pending <span style="color:var(--blue)">Follow-ups</span></div>'
+      +'<div class="pg-sub">2 patients overdue · 2 upcoming</div>'
+      +alertBox('red','2 patients overdue for follow-up','Ravi Tiwari (18 days) and Geeta Rao (5 days) have not attended scheduled visits. Auto-reminders sent with no response.')
+      +'<div class="card mb14" style="border-color:var(--redB)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div>'+tag('tr','OVERDUE 18 DAYS')+'<div style="font-size:14px;font-weight:700;margin-top:8px;margin-bottom:2px">Ravi Tiwari</div><div style="font-size:12px;color:var(--t2)">55 · Heart failure · Was due 2 May</div></div><div style="text-align:right"><div style="font-size:11px;color:var(--t3)">Compliance: 45%</div><div style="font-size:11px;font-weight:700;color:var(--red);margin-top:3px">HIGH RISK</div></div></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">Heart failure patient with critically low compliance. Side effects reported to AI (daytime fatigue from Metoprolol) but never mentioned at OPD. Last ECG was October 2025 — overdue. Missing follow-up + low compliance = high risk combination.</div>'
+        +'<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="act-btn act-red" onclick="showToast(\'Calling Ravi Tiwari...\')">Call now</button><button class="act-btn act-grey" onclick="showToast(\'Urgent reminder sent\')">Send urgent reminder</button><button class="act-btn act-teal" onclick="showToast(\'Emergency home visit scheduled\')">Schedule home visit</button></div>'
+      +'</div>'
+      +'<div class="card mb14" style="border-color:var(--amberB)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div>'+tag('ta','OVERDUE 5 DAYS')+'<div style="font-size:14px;font-weight:700;margin-top:8px;margin-bottom:2px">Geeta Rao</div><div style="font-size:12px;color:var(--t2)">58 · Hyperlipidemia · Was due 15 May</div></div><div style="text-align:right"><div style="font-size:11px;color:var(--t3)">Compliance: 71%</div><div style="font-size:11px;font-weight:700;color:var(--amber);margin-top:3px">MODERATE RISK</div></div></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">Statin therapy review pending. Cholesterol 228 — target below 200. Patient has been asking AI about muscle pain (possible statin-related myopathy). Needs physical review before dose adjustment.</div>'
+        +'<div style="display:flex;gap:7px"><button class="act-btn act-grey" onclick="showToast(\'Reminder sent to Geeta Rao\')">Send reminder</button><button class="act-btn act-teal" onclick="showToast(\'Appointment slot offered\')">Offer slot</button></div>'
+      +'</div>'
+      +'<div class="card mb14" style="border-color:var(--tealB)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div>'+tag('tg','Upcoming · June 3 · Confirmed')+'<div style="font-size:14px;font-weight:700;margin-top:8px;margin-bottom:2px">Rahul Sharma</div><div style="font-size:12px;color:var(--t2)">42 · Hypertension · 94% compliance</div></div><div style="font-size:11px;font-weight:700;color:var(--teal)">WELL CONTROLLED</div></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.7">Confirmed appointment. Main agenda: review fasting sugar 112 (pre-diabetic), check BP at 130/80 target, medication continuation. AI has already flagged the sugar issue to patient.</div>'
+      +'</div>'
+      +'<div class="card">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div>'+tag('tb','Upcoming · June 5 · Pending confirm')+'<div style="font-size:14px;font-weight:700;margin-top:8px;margin-bottom:2px">Anita Sharma</div><div style="font-size:12px;color:var(--t2)">52 · DM + HTN · 78% compliance</div></div><div style="font-size:11px;font-weight:700;color:var(--blue)">STABLE</div></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:11px">6-month review. HbA1c due. BP stable at 136/84. Patient has asked AI about foot care (diabetic neuropathy concern) — address proactively at this visit.</div>'
+        +'<button class="act-btn act-teal" onclick="showToast(\'Reminder sent to Anita Sharma\')">Send reminder</button>'
+      +'</div>';
+  }
+
+  else if(id==='d-ai'){
+    el.innerHTML='<div class="pg-title">AI <span style="color:var(--blue)">Assistant</span></div>'
+      +'<div class="pg-sub">Claude-powered clinical support — patient summaries, medication guidance, protocol queries</div>'
+      +'<div class="g2 mb14">'
+        +'<div class="card" style="margin-bottom:0"><div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Clinical context loaded</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+tag('tb','18 active patients')+tag('tr','1 emergency')+tag('ta','3 low compliance')+'</div></div>'
+        +'<div class="card" style="margin-bottom:0"><div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Quick queries</div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="qr-btn" onclick="setChat(\'d-inp\',\'Ravi Tiwari ka Metoprolol side effects aur alternatives kya hain?\')">Metoprolol alternatives</button><button class="qr-btn" onclick="setChat(\'d-inp\',\'Pre-diabetic patient ke liye India mein lifestyle plan?\')">Pre-diabetes India</button></div></div>'
+      +'</div>';
+    el.appendChild(buildChat('d-inp','d-msgs',true,'Namaste Dr. Deshmukh. I have context on your 18 active patients. I can help with clinical queries, medication guidance, patient summaries, and protocol questions. What would you like to discuss?',['Metoprolol side effects?','Ravi Tiwari ka plan?','HTN ICMR guidelines?','Pre-diabetes diet India']));
+  }
+
+  else if(id==='d-scribe'){
+    var DEMO_T={
+      'Rahul Sharma — 10:00 AM':'BP check kiya — 134/86 hai, bahut improvement hai. Medicines work kar rahi hain. Sugar 112 hai, pre-diabetic. Meetha aur white rice kam karo. June 3 ko phir bulao.',
+      'Meena Joshi — 2:00 PM':'HbA1c 7.2 aaya — target mein hai, bahut acha. Metformin aur insulin continue karein. Next HbA1c 3 mahine baad.',
+      'Suresh Gupta — 3:00 PM':'Raat mein chest pain tha. City Hospital gaye, ECG normal, troponin negative. Stable hai. Metoprolol dose review karna padega. 1 week mein phir aayen.',
+      'Anita Sharma — 3:30 PM':'BP 136/84 — stable. Sugar control mein. Foot mein numbness — neuropathy check karo. HbA1c 3 mahine mein due.'
+    };
+    var DEMO_S={
+      'Rahul Sharma — 10:00 AM':'<strong>🏥 Aaj ki Visit — Rahul ji</strong>\n\n<strong>Aapka BP:</strong> 134/86 — bahut improvement! March mein 148/92 tha. Medicines kaam kar rahi hain.\n\n<strong>Important:</strong> Fasting sugar 112 hai — thoda zyada. Meetha aur white rice bilkul kam karein abhi se.\n\n<strong>Medicines continue karein:</strong>\n→ Amlodipine 5mg — subah 8 baje (khana khane ke baad)\n→ Telmisartan 40mg — raat 9 baje (khane se pehle)\n→ Aspirin 75mg — subah 8 baje\n\n<strong>📅 Agla appointment:</strong> 3 June 2026 — Dr. Deshmukh',
+      'Meena Joshi — 2:00 PM':'<strong>🏥 Aaj ki Visit — Meena ji</strong>\n\nHbA1c 7.2 — bilkul target mein hai! Bahut acha result. Medicines sahi se le rahi hain.\n\n<strong>Continue karein:</strong>\n→ Metformin — subah + raat ke saath\n→ Insulin Glargine — raat soने se pehle\n\n<strong>📅 Agla test:</strong> 3 mahine baad HbA1c',
+    };
+    el.innerHTML='<div class="pg-title">AI <span style="color:var(--teal)">Scribe</span></div>'
+      +'<div class="pg-sub">Doctor bolta hai — patient ko automatically Hindi summary milti hai. No typing. No paperwork.</div>'
+      +'<div style="background:linear-gradient(135deg,rgba(0,201,175,.08),rgba(79,142,247,.05));border:1px solid var(--tealB);border-radius:14px;padding:16px;margin-bottom:14px">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:5px">🎙️ Reverse AI Scribe — Inspired by PostVisit.ai</div>'
+        +'<div style="font-size:11px;color:var(--t2);line-height:1.65">Patient visit ke baad doctor 30 second voice note record karta hai. AfterVisit AI automatically structured Hindi summary banata hai aur patient ko send karta hai. Zero typing, zero paperwork.</div>'
+      +'</div>'
+      +'<div class="g2">'
+        +'<div class="card" style="margin-bottom:0">'
+          +'<div class="sec-title">Record patient note</div>'
+          +'<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">Select patient</label>'
+            +'<select id="scribe-pt" style="background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:10px 13px;color:var(--t1);font-size:13px;outline:none;width:100%">'
+              +'<option>Rahul Sharma — 10:00 AM</option>'
+              +'<option>Meena Joshi — 2:00 PM</option>'
+              +'<option>Suresh Gupta — 3:00 PM</option>'
+              +'<option>Anita Sharma — 3:30 PM</option>'
+            +'</select>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px;margin-bottom:14px">'
+            +'<button id="rec-btn" onclick="startRec()" style="flex:1;padding:12px;border-radius:9px;background:var(--red2);color:var(--red);border:1px solid var(--redB);font-size:13px;font-weight:700;cursor:pointer">🎙️ Start Recording</button>'
+            +'<button id="stop-btn" onclick="stopRec()" disabled style="flex:1;padding:12px;border-radius:9px;background:var(--bg3);color:var(--t3);border:1px solid var(--b1);font-size:13px;font-weight:700;cursor:pointer;opacity:.4">⏹ Stop</button>'
+          +'</div>'
+          +'<div id="rec-box" style="display:none;background:var(--red2);border:1px solid var(--redB);border-radius:10px;padding:12px;margin-bottom:12px">'
+            +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><div id="rec-dot" style="width:10px;height:10px;border-radius:50%;background:var(--red);animation:recblink 1s ease infinite"></div><span style="font-size:12px;font-weight:700;color:var(--red)">Recording...</span><span style="font-size:11px;color:var(--t3)" id="rec-timer">0:00</span></div>'
+            +'<div style="font-size:11px;color:rgba(240,80,100,.8)">Speak naturally — diagnosis, medicines, diet advice, follow-up date.</div>'
+          +'</div>'
+          +'<div id="transcript-box" style="display:none">'
+            +'<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px">Transcribed (demo)</div>'
+            +'<div id="transcript-text" style="background:var(--bg3);border-radius:9px;padding:11px;font-size:12px;color:var(--t2);line-height:1.7;border:1px solid var(--b1);font-style:italic"></div>'
+          +'</div>'
+        +'</div>'
+        +'<div class="card" style="margin-bottom:0">'
+          +'<div class="sec-title">AI-generated Hindi summary</div>'
+          +'<div id="summary-box" style="background:var(--bg3);border-radius:10px;padding:13px;border:1px solid var(--tealB);min-height:180px;font-size:12px;color:var(--t2);line-height:1.8">'
+            +'<div style="text-align:center;padding:30px 0;color:var(--t3)">Record voice note to generate summary...</div>'
+          +'</div>'
+          +'<div style="display:flex;gap:7px;margin-top:12px">'
+            +'<button id="send-btn" onclick="sendScribeSummary()" style="display:none;background:var(--teal2);color:var(--teal);border:1px solid var(--tealB);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer">📱 Send to Patient</button>'
+            +'<button id="edit-btn" onclick="showToast(\'Edit mode activated\')" style="display:none;background:var(--bg3);color:var(--t2);border:1px solid var(--b2);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer">✏️ Edit</button>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="card"><div class="sec-title">Today\'s scribe log — 4 summaries sent</div><div class="tl">'
+        +tliD('Rahul Sharma — BP summary sent','Hindi summary generated in 28 seconds. Delivered to patient phone.','10:28 AM','var(--teal)')
+        +tliD('Priya Kulkarni — First visit summary sent','Welcome summary with medicine schedule. Delivered.','10:52 AM','var(--teal)')
+        +tliD('Deepak Verma — Medication review sent','Side effect guidance + updated schedule. Delivered.','11:26 AM','var(--teal)')
+        +tliD('Geeta Rao — Lab review summary sent','Cholesterol explanation in Hindi. Delivered.','11:54 AM','var(--teal)')
+      +'</div></div>';
+    window._SCRIBE_T=DEMO_T;window._SCRIBE_S=DEMO_S;
+    setTimeout(initScribe,50);
+  }
+}
+
+// ═══ CHAT ═══
+function buildChat(inputId,msgsId,isDoc,initMsg,qrs){
+  var wrap=document.createElement('div');
+  wrap.className='chat-wrap';
+  var ac=isDoc?'var(--blue)':'var(--teal)';
+  var ac2=isDoc?'var(--blue2)':'var(--teal2)';
+  var acB=isDoc?'var(--blueB)':'var(--tealB)';
+  wrap.innerHTML='<div class="chat-hdr"><div class="chat-av" style="background:'+ac2+';border:1px solid '+acB+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="'+ac+'" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg></div><div><div class="chat-name">AfterVisit AI</div><div class="chat-status"><span class="online-dot" style="background:'+ac+'"></span><span style="color:'+ac+'">Claude-powered · 24/7</span></div></div><span class="tag '+(isDoc?'tb':'tg')+'" style="margin-left:auto">Live</span></div>'
+    +'<div class="qr-wrap" id="qr-'+inputId+'"></div>'
+    +'<div class="chat-msgs" id="'+msgsId+'"><div class="msg msg-ai">'+initMsg+'<div class="msg-time">Ready</div></div></div>'
+    +'<div class="chat-inp-row"><input class="chat-inp" id="'+inputId+'" placeholder="'+(isDoc?'Clinical query or patient question...':'Apna sawaal type karein...')+'"><button class="chat-send" id="send-'+inputId+'" style="background:'+ac+'"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>';
+  setTimeout(function(){
+    var qrWrap=document.getElementById('qr-'+inputId);
+    qrs.forEach(function(q){
+      var b=document.createElement('button');b.className='qr-btn';b.textContent=q;
+      b.onclick=function(){setChat(inputId,q);};
+      if(qrWrap)qrWrap.appendChild(b);
+    });
+    var sendBtn=document.getElementById('send-'+inputId);
+    var inp=document.getElementById(inputId);
+    if(sendBtn)sendBtn.onclick=function(){sendMsg(inputId,msgsId,isDoc);};
+    if(inp)inp.onkeydown=function(e){if(e.key==='Enter')sendMsg(inputId,msgsId,isDoc);};
+  },10);
+  return wrap;
+}
+
+function setChat(inputId,text){
+  var inp=document.getElementById(inputId);
+  if(inp){inp.value=text;inp.focus();}
+}
+
+async function sendMsg(inputId,msgsId,isDoc){
+  var inp=document.getElementById(inputId);
+  var msgs=document.getElementById(msgsId);
+  if(!inp||!msgs)return;
+  var text=inp.value.trim();
+  if(!text)return;
+  var sys=isDoc?D_SYS:P_SYS;
+  var t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  inp.value='';
+  var um=document.createElement('div');
+  um.className='msg msg-user';
+  um.innerHTML=text+'<div class="msg-time">'+t+' ✓✓</div>';
+  msgs.appendChild(um);msgs.scrollTop=9999;
+  var typing=document.createElement('div');
+  typing.className='typing';
+  typing.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  msgs.appendChild(typing);msgs.scrollTop=9999;
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:sys,messages:[{role:'user',content:text}]})
+    });
+    var data=await res.json();
+    var reply=(data.content&&data.content[0]&&data.content[0].text)||'Sorry, please try again.';
+    if(msgs.contains(typing))msgs.removeChild(typing);
+    var am=document.createElement('div');am.className='msg msg-ai';
+    am.innerHTML=reply.replace(/\n/g,'<br>')+'<div class="msg-time">'+t+'</div>';
+    msgs.appendChild(am);msgs.scrollTop=9999;
+  }catch(err){
+    if(msgs.contains(typing))msgs.removeChild(typing);
+    var em=document.createElement('div');em.className='msg msg-ai';
+    em.textContent='Network error. Please try again.';
+    msgs.appendChild(em);
+  }
+}
+
+// ═══ MODALS ═══
+function showVisitModal(i){
+  var v=VISITS[i];
+  openModal('<div style="font-size:10px;color:var(--t3);margin-bottom:8px">'+v.date+'</div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:2px">'+v.doc+'</div>'
+    +'<div style="font-size:12px;color:var(--t2);margin-bottom:14px">'+v.spec+'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat('+v.vitals.length+',1fr);gap:8px;margin-bottom:14px">'+v.vitals.map(function(vt){var cc=vt[2]==='green'?'var(--green)':vt[2]==='red'?'var(--red)':'var(--amber)';return '<div style="background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">'+vt[0]+'</div><div style="font-size:13px;font-weight:700;color:'+cc+'">'+vt[1]+'</div></div>';}).join('')+'</div>'
+    +'<div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:12px;border:1px solid var(--b1)"><div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Diagnosis</div><div style="font-size:12px;color:var(--t2);line-height:1.7;font-style:italic">'+v.dx+'</div></div>'
+    +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Doctor\'s instructions</div>'+v.rx.map(function(r){return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:12px;color:var(--t2);line-height:1.5"><span style="color:var(--teal);flex-shrink:0">→</span>'+r+'</div>';}).join('')+'</div>'
+    +'<div style="background:var(--teal2);border:1px solid var(--tealB);border-radius:9px;padding:11px"><div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Next follow-up</div><div style="font-size:12px;color:var(--t1)">'+v.fu+'</div></div>');
+}
+
+function showPtModal(i){
+  var p=PATIENTS[i];
+  openModal('<div style="display:flex;align-items:center;gap:11px;margin-bottom:16px"><div style="width:42px;height:42px;border-radius:50%;background:var(--blue2);color:var(--blue);border:1px solid var(--blueB);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">'+p.init+'</div><div><div style="font-size:16px;font-weight:700">'+p.name+'</div><div style="font-size:12px;color:var(--t2)">'+p.sub+' · '+p.cond+'</div></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+      +'<div style="background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Compliance</div><div style="font-size:18px;font-weight:700;color:'+p.cc+'">'+p.comp+'%</div></div>'
+      +'<div style="background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">AI questions</div><div style="font-size:18px;font-weight:700;color:var(--blue)">'+p.ai+'</div></div>'
+      +'<div style="background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Next visit</div><div style="font-size:11px;font-weight:600;color:var(--t1);margin-top:4px">'+p.next+'</div></div>'
+    +'</div>'
+    +'<div style="margin-bottom:13px"><div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Current medications</div>'+p.meds.map(function(m){return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:12px;color:var(--t2)"><span style="color:var(--teal);flex-shrink:0">→</span>'+m+'</div>';}).join('')+'</div>'
+    +'<div style="background:var(--amber2);border:1px solid var(--amberB);border-radius:9px;padding:11px;margin-bottom:13px"><div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">AI flag</div><div style="font-size:12px;color:rgba(245,166,35,.9);line-height:1.6">'+p.flag+'</div></div>'
+    +'<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="act-btn act-red" onclick="showToast(\'Calling '+p.name+'...\');closeModal()">Call patient</button><button class="act-btn act-teal" onclick="showToast(\'Reminder sent to '+p.name+'\');closeModal()">Send reminder</button><button class="act-btn act-grey" onclick="showToast(\'Note added to profile\');closeModal()">Add note</button></div>');
+}
+
+// ═══ MISC ═══
+function toggleMed(btn){
+  btn.classList.toggle('done');
+  btn.querySelector('svg').style.stroke=btn.classList.contains('done')?'var(--teal)':'var(--t3)';
+}
+
+function buildHeatmap(){
+  var hm=document.getElementById('hm');
+  if(!hm)return;
+  var sts=['g','g','a','g','g','g','g','g','g','g','g','g','g','g','g','a','g','g','g','g','g'];
+  for(var d=1;d<=21;d++){
+    var s=sts[d-1];
+    var cell=document.createElement('div');cell.className='hm-cell';
+    if(s==='g'){cell.style.background='var(--green2)';cell.style.borderColor='var(--greenB)';cell.style.color='var(--green)';}
+    else if(s==='a'){cell.style.background='var(--amber2)';cell.style.borderColor='var(--amberB)';cell.style.color='var(--amber)';}
+    cell.textContent=d;hm.appendChild(cell);
+  }
+}
+function tliD(title,desc,time,dc){return '<div class="tl-item"><div class="tl-dot" style="border-color:'+dc+'"></div><div class="tl-body"><div class="tl-title">'+title+'</div><div class="tl-desc">'+desc+'</div><div class="tl-time">'+time+'</div></div></div>';}
+
+// AI SCRIBE
+var _recInt=null,_recSec=0;
+function initScribe(){}
+function startRec(){
+  var box=document.getElementById('rec-box');
+  var rb=document.getElementById('rec-btn');
+  var sb=document.getElementById('stop-btn');
+  if(box)box.style.display='block';
+  if(rb){rb.disabled=true;rb.style.opacity='.4';}
+  if(sb){sb.disabled=false;sb.style.opacity='1';}
+  _recSec=0;
+  _recInt=setInterval(function(){
+    _recSec++;
+    var t=document.getElementById('rec-timer');
+    if(t)t.textContent=Math.floor(_recSec/60)+':'+((_recSec%60)<10?'0':'')+_recSec%60;
+    if(_recSec>=7)stopRec();
+  },1000);
+}
+function stopRec(){
+  clearInterval(_recInt);
+  var box=document.getElementById('rec-box');
+  var rb=document.getElementById('rec-btn');
+  var sb=document.getElementById('stop-btn');
+  if(box)box.style.display='none';
+  if(rb){rb.disabled=false;rb.style.opacity='1';}
+  if(sb){sb.disabled=true;sb.style.opacity='.4';}
+  var pt=document.getElementById('scribe-pt');
+  var ptVal=pt?pt.value:'Rahul Sharma — 10:00 AM';
+  var tt=document.getElementById('transcript-box');
+  var tx=document.getElementById('transcript-text');
+  if(tt)tt.style.display='block';
+  if(tx)tx.textContent=(window._SCRIBE_T&&window._SCRIBE_T[ptVal])||'Voice note received. AI processing...';
+  setTimeout(function(){
+    var sb2=document.getElementById('summary-box');
+    var sendBtn=document.getElementById('send-btn');
+    var editBtn=document.getElementById('edit-btn');
+    var summary=(window._SCRIBE_S&&window._SCRIBE_S[ptVal])||'<strong>Visit Summary Generated!</strong>\n\nAaj ki visit ka complete Hindi summary tayaar ho gaya hai. Patient ke phone pe bhejne ke liye ready hai.';
+    if(sb2)sb2.innerHTML='<div style="white-space:pre-line;color:var(--t1)">'+summary.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')+'</div>';
+    if(sendBtn)sendBtn.style.display='inline-flex';
+    if(editBtn)editBtn.style.display='inline-flex';
+  },1800);
+}
+function sendScribeSummary(){
+  showToast('Summary sent to patient\'s phone ✓');
+  var b=document.getElementById('send-btn');
+  if(b){b.textContent='✓ Sent';b.disabled=true;b.style.opacity='.6';}
+}
+
+// add recblink keyframe dynamically
+(function(){
+  var s=document.createElement('style');
+  s.textContent='@keyframes recblink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}';
+  document.head.appendChild(s);
+})();
+
+</script>
+</body>
+</html>
