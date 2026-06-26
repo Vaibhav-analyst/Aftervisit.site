@@ -31,9 +31,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 # ── STARTUP ────────────────────────────────────────
 @app.on_event("startup")
 def startup():
-    init_db()
-    seed_demo_data()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"init_db skipped/failed at startup: {e}")
 
+# One-time setup endpoint — call it ONCE after deploy to create tables + demo data
+@app.get("/api/setup")
+def setup():
+    try:
+        init_db()
+        seed_demo_data()
+        return {"ok": True, "message": "Database initialized and seeded"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 # ── MODELS ─────────────────────────────────────────
 class UserRegister(BaseModel):
     name: str
