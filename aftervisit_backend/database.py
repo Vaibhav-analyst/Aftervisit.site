@@ -13,7 +13,10 @@ Set on Vercel (the Turso integration adds these automatically):
 import os, sqlite3
 from datetime import date, timedelta
 
-TURSO_URL   = os.environ.get("TURSO_DATABASE_URL", "")
+TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "")
+# Vercel serverless can't hold WebSockets — force HTTPS transport for libSQL
+if TURSO_URL.startswith("libsql://"):
+    TURSO_URL = "https://" + TURSO_URL[len("libsql://"):]
 TURSO_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
 LOCAL_PATH  = os.environ.get("DB_PATH", "aftervisit.db")
 
