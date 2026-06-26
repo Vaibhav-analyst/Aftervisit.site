@@ -1,10 +1,82 @@
-import sqlite3
+"""
+AfterVisit database layer.
+
+- LOCAL dev (no TURSO_DATABASE_URL): uses a normal sqlite3 file — unchanged behaviour.
+- PRODUCTION (TURSO_DATABASE_URL set, e.g. on Vercel): talks to Turso (libSQL) over HTTP
+  through a thin compatibility shim so the rest of the app keeps using sqlite3-style calls
+  (conn.execute(...).fetchone(), row["col"], dict(row), conn.commit(), conn.close()).
+
+Set on Vercel (the Turso integration adds these automatically):
+    TURSO_DATABASE_URL=libsql://your-db.turso.io
+    TURSO_AUTH_TOKEN=...
+"""
+import os, sqlite3
 from datetime import date, timedelta
 
-DB_PATH = "aftervisit.db"
+TURSO_URL   = os.environ.get("TURSO_DATABASE_URL", "")
+TURSO_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
+LOCAL_PATH  = os.environ.get("DB_PATH", "aftervisit.db")
+
+# ── Turso (libSQL) compatibility shim ──────────────────────────────
+class Row(dict):
+    """Quacks like sqlite3.Row: supports row['col'], row[0], dict(row)."""
+    def __init__(self, columns, values):
+        super().__init__(zip(columns, values))
+        self._vals = list(values)
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._vals[key]
+        return super().__getitem__(key)
+
+class _Cursor:
+    def __init__(self, result):
+        cols = list(result.columns) if result is not None else []
+        self._rows = [Row(cols, r) for r in result.rows] if result is not None else []
+        self.lastrowid = getattr(result, "last_insert_rowid", None)
+        self.rowcount  = getattr(result, "rows_affected", -1)
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+    def fetchall(self):
+        return self._rows
+    def __iter__(self):
+        return iter(self._rows)
+
+_client = None
+def _get_client():
+    global _client
+    if _client is None:
+        import libsql_client
+        _client = libsql_client.create_client_sync(url=TURSO_URL, auth_token=TURSO_TOKEN or None)
+    return _client
+
+class _Conn:
+    """sqlite3-Connection-like wrapper over a shared libSQL client."""
+    def __init__(self):
+        self.client = _get_client()
+        self._last = None
+        self.lastrowid = None
+    def execute(self, sql, params=()):
+        args = list(params) if params else []
+        res = self.client.execute(sql, args) if args else self.client.execute(sql)
+        cur = _Cursor(res)
+        self._last = cur
+        self.lastrowid = cur.lastrowid
+        return cur
+    def cursor(self):
+        return self
+    def fetchone(self):
+        return self._last.fetchone() if self._last else None
+    def fetchall(self):
+        return self._last.fetchall() if self._last else []
+    def commit(self):
+        pass  # libSQL autocommits each statement
+    def close(self):
+        pass  # keep the shared client warm across requests
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    if TURSO_URL:
+        return _Conn()
+    conn = sqlite3.connect(LOCAL_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -13,7 +13,9 @@ from database import get_db, init_db, seed_demo_data
 SECRET_KEY = "aftervisit-secret-key-2026-nagpur"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
-CLAUDE_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_CHAT = "https://api.openai.com/v1/chat/completions"
+OPENAI_AUDIO = "https://api.openai.com/v1/audio/transcriptions"
 
 app = FastAPI(title="AfterVisit API", version="1.0.0")
 
@@ -103,6 +105,28 @@ def get_patient_id(user_id: int, conn):
     pat = conn.execute("SELECT id FROM patients WHERE user_id=?", (user_id,)).fetchone()
     return pat["id"] if pat else None
 
+# ── OPENAI HELPER ──────────────────────────────────
+def ai_complete(system: str, messages: list, max_tokens: int = 500, json_mode: bool = False):
+    """One place for all OpenAI chat calls. Returns text, or None on failure."""
+    if not OPENAI_API_KEY:
+        return None
+    body = {
+        "model": "gpt-4o-mini",
+        "max_tokens": max_tokens,
+        "messages": [{"role": "system", "content": system}] + messages,
+    }
+    if json_mode:
+        body["response_format"] = {"type": "json_object"}
+    try:
+        r = httpx.post(
+            OPENAI_CHAT,
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}",
+                     "Content-Type": "application/json"},
+            json=body, timeout=60)
+        return r.json()["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+
 # ── AUTH ROUTES ────────────────────────────────────
 @app.post("/api/auth/register")
 def register(data: UserRegister):
@@ -112,10 +136,10 @@ def register(data: UserRegister):
         conn.close()
         raise HTTPException(status_code=400, detail="Email already registered")
     pwd_hash = pwd_context.hash(data.password)
-    conn.execute(
+    cur = conn.execute(
         "INSERT INTO users (name,email,phone,password_hash,role,city) VALUES (?,?,?,?,?,?)",
         (data.name, data.email, data.phone, pwd_hash, data.role, data.city))
-    user_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    user_id = cur.lastrowid
     if data.role == "patient":
         import random
         code = f"AV-2026-{random.randint(1000,9999)}"
@@ -357,23 +381,13 @@ Keep response under 4 lines. Never diagnose."""
                       "Patient has been directed to call 108. Please follow up immediately.", "danger"))
     else:
         # AI response for non-emergency
-        if CLAUDE_API_KEY:
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.post(
-                        "https://api.anthropic.com/v1/messages",
-                        headers={"Content-Type": "application/json",
-                                 "x-api-key": CLAUDE_API_KEY,
-                                 "anthropic-version": "2023-06-01"},
-                        json={"model": "claude-sonnet-4-20250514",
-                              "max_tokens": 300,
-                              "system": system_prompt,
-                              "messages": [{"role": "user", "content": f"Symptom reported: {data.symptom}"}]},
-                        timeout=30)
-                    result = resp.json()
-                    ai_response = result["content"][0]["text"]
-            except:
-                ai_response = "Symptom noted. Agar 30 min mein theek nahi hua — doctor ko call karein."
+        reply = ai_complete(system_prompt,
+                            [{"role": "user", "content": f"Symptom reported: {data.symptom}"}],
+                            max_tokens=300)
+        if reply:
+            ai_response = reply
+        else:
+            ai_response = "Symptom noted. Agar 30 min mein theek nahi hua — doctor ko call karein."
 
     conn.execute("""INSERT INTO symptom_logs (patient_id, symptom, severity, ai_response, escalated)
                    VALUES (?,?,?,?,?)""", (pat_id, data.symptom, data.severity, ai_response, escalated))
@@ -417,24 +431,8 @@ Reference Indian clinical context where relevant. Be concise and actionable."""
     messages = [{"role": h["role"], "content": h["message"]} for h in history]
     messages.append({"role": "user", "content": data.message})
 
-    ai_reply = "Sorry, AI is not available right now. Please try again."
-    if CLAUDE_API_KEY:
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(
-                    "https://api.anthropic.com/v1/messages",
-                    headers={"Content-Type": "application/json",
-                             "x-api-key": CLAUDE_API_KEY,
-                             "anthropic-version": "2023-06-01"},
-                    json={"model": "claude-sonnet-4-20250514",
-                          "max_tokens": 500,
-                          "system": system,
-                          "messages": messages},
-                    timeout=30)
-                result = resp.json()
-                ai_reply = result["content"][0]["text"]
-        except Exception as e:
-            ai_reply = f"Network error. Please try again."
+    reply = ai_complete(system, messages, max_tokens=500)
+    ai_reply = reply if reply else "Sorry, AI is not available right now. Please try again."
 
     # Save to history
     conn.execute("INSERT INTO chat_history (user_id, role, message) VALUES (?,?,?)",
@@ -654,6 +652,57 @@ def compliance_report(user = Depends(get_current_user)):
     avg = round(sum(p["compliance_pct"] for p in result) / len(result)) if result else 0
     conn.close()
     return {"patients": result, "avg_compliance": avg}
+
+# ── AI SCRIBE (record visit) ───────────────────────
+SCRIBE_SYS = """You are a clinical scribe for an Indian doctor.
+From the consultation transcript, extract a STRUCTURED DRAFT for the doctor to review.
+Use ONLY information present in the transcript. Do NOT invent diagnoses, drugs, doses, or dates.
+If something was not said, leave that field empty. This draft is verified by a doctor before any patient sees it.
+Return ONLY valid JSON with keys:
+{"diagnosis":"","key_points":[],"medications":[],"follow_up":"","warning_signs":[],"patient_summary":""}
+patient_summary should be simple plain language (Hindi/Hinglish ok if the transcript is)."""
+
+class TranscriptIn(BaseModel):
+    transcript: str
+
+@app.post("/api/scribe/transcribe")
+async def scribe_transcribe(audio: UploadFile = File(...)):
+    """Word-for-word transcription of consultation audio via Whisper."""
+    if not OPENAI_API_KEY:
+        raise HTTPException(500, "OPENAI_API_KEY not set")
+    raw = await audio.read()
+    try:
+        r = httpx.post(
+            OPENAI_AUDIO,
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+            data={"model": "whisper-1"},
+            files={"file": (audio.filename or "visit.webm", raw, audio.content_type or "audio/webm")},
+            timeout=120)
+        return {"transcript": r.json().get("text", "")}
+    except Exception as e:
+        raise HTTPException(500, f"Transcription failed: {e}")
+
+@app.post("/api/scribe/summarize")
+def scribe_summarize(body: TranscriptIn, user = Depends(get_current_user)):
+    """Transcript -> structured AI DRAFT. Doctor reviews before saving via /api/doctor/visits."""
+    if user["role"] != "doctor":
+        raise HTTPException(403, "Doctor access only")
+    if not body.transcript.strip():
+        raise HTTPException(400, "transcript is required")
+    out = ai_complete(SCRIBE_SYS, [{"role": "user", "content": body.transcript}],
+                      max_tokens=800, json_mode=True)
+    try:
+        s = json.loads(out)
+    except Exception:
+        s = {}
+    return {
+        "diagnosis": s.get("diagnosis", "") or "",
+        "key_points": s.get("key_points", []) or [],
+        "medications": s.get("medications", []) or [],
+        "follow_up": s.get("follow_up", "") or "",
+        "warning_signs": s.get("warning_signs", []) or [],
+        "patient_summary": s.get("patient_summary", "") or "",
+    }
 
 # ── HEALTH CHECK ───────────────────────────────────
 @app.get("/")
